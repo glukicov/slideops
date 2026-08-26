@@ -1,0 +1,8 @@
+.DS_Store
+.smoke/
+.smokevenv/
+__pycache__/
+.venv/
+.ruff_cache/
+.pytest_cache/
+dist/

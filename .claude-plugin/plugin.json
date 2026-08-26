@@ -1,0 +1,19 @@
+{
+  "name": "slideops",
+  "description": "Turn a repository into a slide deck, then find out the day it stops matching the code. Ships slideops (repo to deck, with citation-based freshness checking) and slides-to-pdf (any hash-navigated HTML deck to a verified PDF).",
+  "version": "1.0.0",
+  "author": {
+    "name": "Gleb Lukicov"
+  },
+  "homepage": "https://github.com/glukicov/slideops",
+  "repository": "https://github.com/glukicov/slideops",
+  "license": "MIT",
+  "keywords": [
+    "slides",
+    "presentations",
+    "documentation",
+    "docs-as-code",
+    "freshness",
+    "developer-tools"
+  ]
+}

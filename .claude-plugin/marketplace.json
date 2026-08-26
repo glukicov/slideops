@@ -1,0 +1,25 @@
+{
+  "name": "slideops",
+  "owner": {
+    "name": "Gleb Lukicov",
+    "url": "https://github.com/glukicov"
+  },
+  "metadata": {
+    "description": "Documentation that tells you when it stops matching the code."
+  },
+  "plugins": [
+    {
+      "name": "slideops",
+      "source": "./",
+      "description": "Turn a repository into a slide deck, then find out the day it stops matching the code. Includes slides-to-pdf for verified PDF export.",
+      "category": "documentation",
+      "keywords": [
+        "slides",
+        "presentations",
+        "documentation",
+        "docs-as-code",
+        "freshness"
+      ]
+    }
+  ]
+}

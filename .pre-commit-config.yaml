@@ -1,0 +1,41 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: trailing-whitespace
+        exclude: \.(html|pdf)$
+      - id: end-of-file-fixer
+        exclude: \.(html|pdf)$
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.4
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: ty
+        name: ty (type check)
+        entry: uv run ty check
+        language: system
+        types: [python]
+        pass_filenames: false
+
+      - id: pytest
+        name: pytest (unit + freshness tests)
+        entry: uv run pytest
+        language: system
+        types: [python]
+        pass_filenames: false
+
+      - id: validate-skills
+        name: validate skills, template and example decks
+        entry: uv run python scripts/validate.py
+        language: system
+        pass_filenames: false
+        files: ^skills/

@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  quality:
+    name: Lint, types and tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          python-version: "3.14"
+
+      - name: Install the development toolchain
+        run: uv sync --dev
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Format
+        run: uv run ruff format --check .
+
+      - name: Types
+        run: uv run ty check
+
+      - name: Tests
+        run: uv run pytest
+
+      - name: Structural and frontmatter checks
+        run: uv run python scripts/validate.py
+
+      - name: Citations in the example deck still match this repo
+        run: uv run python skills/slideops/scripts/check.py skills/slideops/examples/skill-demo.html --repo .
+
+  skill-portability:
+    name: Skills run on bare Python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Copy the skill the way a user installs it
+        run: |
+          mkdir -p ~/.claude/skills
+          cp -R skills/slideops ~/.claude/skills/slideops-installed
+
+      - name: check.py and cite.py work with no dependencies
+        run: |
+          python3 ~/.claude/skills/slideops-installed/scripts/cite.py README.md:1-3 --repo .
+          python3 ~/.claude/skills/slideops-installed/scripts/check.py \
+            skills/slideops/examples/skill-demo.html --repo .
+
+      - name: install.sh reaches every agent directory
+        run: |
+          ./install.sh --copy
+          test -f ~/.claude/skills/slideops/SKILL.md
+          test -f ~/.agents/skills/slideops/SKILL.md
+          test -f ~/.agents/skills/slides-to-pdf/SKILL.md
+          python3 ~/.agents/skills/slideops/scripts/check.py \
+            skills/slideops/examples/skill-demo.html --repo .
+
+  smoke:
+    name: Render and export smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Chromium
+        run: npx --yes playwright@1.49.0 install --with-deps chromium
+      - name: Install smoke test deps
+        run: pip install --quiet 'pypdfium2==4.30.0' 'Pillow==11.0.0' 'typer>=0.15'
+      - name: Render every slide and export a verified PDF
+        run: python3 scripts/smoke_test.py
+      - name: Upload rendered slides on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-output
+          path: .smoke/
+          retention-days: 7

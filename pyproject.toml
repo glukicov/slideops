@@ -1,0 +1,57 @@
+[project]
+name = "slideops"
+version = "1.0.0"
+description = "Agent Skills that turn a repository into a slide deck and tell you when it stops matching the code"
+readme = "README.md"
+requires-python = ">=3.14"
+license = { file = "LICENSE" }
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.14",
+  "ty>=0.0.1a1",
+  "pre-commit>=4.0",
+  "typer>=0.15",
+  "pypdfium2==4.30.0",
+  "Pillow>=11.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 120
+target-version = "py314"
+src = ["scripts", "skills/slideops/scripts", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E",
+  "F",
+  "I",
+  "UP",
+  "B",
+  "SIM",
+  "PTH",
+  "RUF",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["check", "cite"]
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ty.environment]
+python-version = "3.14"
+extra-paths = ["skills/slideops/scripts"]
+
+[tool.ty.src]
+include = ["scripts", "skills/slideops/scripts", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["skills/slideops/scripts"]
+addopts = "-q"
