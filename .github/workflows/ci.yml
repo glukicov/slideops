@@ -83,6 +83,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Let Chrome keep its sandbox
+        # Ubuntu 24.04 runners block unprivileged user namespaces through AppArmor, which
+        # is the mechanism Chrome's sandbox needs. Re-enable it rather than passing
+        # --no-sandbox: the deck is built from repository content, and the sandbox is the
+        # layer that contains a malicious payload if one ever reaches a slide.
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - name: Install Chromium
         run: npx --yes playwright@1.49.0 install --with-deps chromium
       - name: Install smoke test deps
