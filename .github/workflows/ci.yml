@@ -23,8 +23,9 @@ jobs:
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-          python-version: "3.14"
 
+      # No python-version here, and none in the jobs below: uv reads .python-version,
+      # which is the file that already decides the version locally.
       - name: Install the development toolchain
         run: uv sync --dev
 
@@ -55,7 +56,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.14"
+          python-version-file: .python-version
 
       - name: Copy the skill the way a user installs it
         run: |
@@ -82,9 +83,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: astral-sh/setup-uv@v7
         with:
-          python-version: "3.14"
+          enable-cache: true
       - uses: actions/setup-node@v7
         with:
           node-version: "22"
@@ -96,10 +97,13 @@ jobs:
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - name: Install Chromium
         run: npx --yes playwright@1.49.0 install --with-deps chromium
-      - name: Install smoke test deps
-        run: pip install --quiet 'pypdfium2==4.30.0' 'Pillow==12.3.0' 'typer>=0.15'
+      - name: Install the development toolchain
+        # These three used to be pinned again on a pip line here, which drifted the moment
+        # Dependabot bumped one of them in pyproject.toml: the gate ran one version and
+        # this job tested another. The dev group is the only place they are named now.
+        run: uv sync --dev
       - name: Render every slide and export a verified PDF
-        run: python3 scripts/smoke_test.py
+        run: uv run python scripts/smoke_test.py
       - name: Upload rendered slides on failure
         if: failure()
         uses: actions/upload-artifact@v7
