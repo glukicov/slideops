@@ -52,7 +52,8 @@ snapshot installs, the per-agent table and how updates reach you, see
 
 Open a repository and say:
 
-> make slides about this repo
+> [!TIP]
+> ### 💬 make slides about this repo
 
 SlideOps scans the repo first, then asks one compact set of questions: which topic (it
 proposes concrete candidates it found, each with a "why now"), audience, length, theme and
@@ -60,11 +61,13 @@ extras. You get an outline to approve before it writes any HTML.
 
 If you already know what you want, skip the intake:
 
-> deep dive on the auth subsystem, Ledger Dark theme, 15 slides, with a PDF
+> [!NOTE]
+> ### 💬 deep dive on the auth subsystem, Ledger Dark theme, 15 slides, with a PDF
 
 Months later, in the same repository:
 
-> is the architecture deck still accurate?
+> [!IMPORTANT]
+> ### 💬 is the architecture deck still accurate?
 
 The agent sweeps the deck folder and triages by status. It re-quotes whatever merely moved,
 and flags the slides whose *claim* might no longer hold. It repairs what drifted instead of
