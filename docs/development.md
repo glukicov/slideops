@@ -1,4 +1,6 @@
-# Developing SlideOps
+# 🛠️ Developing SlideOps
+
+<sub>[← README](../README.md) · [Install](install.md) · [Freshness](freshness.md) · **Development** · [Changelog](../CHANGELOG.md)</sub>
 
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![ty](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ty/main/assets/badge/v0.json)](https://github.com/astral-sh/ty)
@@ -73,9 +75,10 @@ run with whatever `python3` is there, with nothing installed.
 
 ## Releasing
 
-Bumping `version` in `.claude-plugin/plugin.json` is what delivers an update to installed
-users. `scripts/validate.py` fails the build if it ever disagrees with the skill's own
-`metadata.version`, so the two move together.
+> [!IMPORTANT]
+> Bumping `version` in `.claude-plugin/plugin.json` is what delivers an update to installed
+> users. `scripts/validate.py` fails the build if it ever disagrees with the skill's own
+> `metadata.version`, so the two move together.
 
 One thing that's deliberately *not* a pre-commit hook: the deck freshness check.
 Documentation drift is a review-time concern, so it runs on pull requests instead. See

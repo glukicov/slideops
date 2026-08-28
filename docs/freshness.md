@@ -1,4 +1,6 @@
-# The Ops half: build once, stay in sync
+# 🔎 The Ops half: build once, stay in sync
+
+<sub>[← README](../README.md) · [Install](install.md) · **Freshness** · [Development](development.md) · [Changelog](../CHANGELOG.md)</sub>
 
 Generating a deck is the easy part now. This page is about the other half: knowing whether
 anyone should still trust it six months later.
@@ -7,6 +9,17 @@ It's the tour, not the specification. Attribute formats, how the hash is compute
 each status means to the agent all live in
 [`skills/slideops/references/freshness.md`](../skills/slideops/references/freshness.md),
 which ships inside the skill and wins if the two ever disagree.
+
+```mermaid
+flowchart LR
+    A["📁 Repository"] -->|"build"| B["🖥️ Deck<br><sub>every snippet carries<br>path + lines + hash</sub>"]
+    B -->|"months pass"| C{"🔎 check.py<br><sub>0 tokens, ms</sub>"}
+    C -->|"CURRENT"| D["✅ Nothing to do"]
+    C -->|"MOVED"| E["🔁 Re-quote<br><sub>automatable</sub>"]
+    C -->|"CHANGED · MISSING"| F["🧠 Agent repairs<br>just those slides"]
+    E --> B
+    F --> B
+```
 
 ## The mechanism
 
@@ -54,9 +67,10 @@ $ python3 check.py docs/slides/ --repo .
 | `MISSING` | The file is gone | The slide may be describing something that no longer exists |
 | `UNVERIFIED` | No hash, or a build commit this repo doesn't have | A build defect, not drift |
 
-`MOVED` versus `CHANGED` is the distinction I care about most, and it's what makes this
-worth automating. Code shifting thirty lines down isn't a documentation problem, and a tool
-that can't tell the two apart produces noise people learn to ignore.
+> [!IMPORTANT]
+> `MOVED` versus `CHANGED` is the distinction I care about most, and it's what makes this
+> worth automating. Code shifting thirty lines down isn't a documentation problem, and a
+> tool that can't tell the two apart produces noise people learn to ignore.
 
 `--suggest` prints the diff, the commits responsible, and the corrected citation. `--json`
 is a complete repair brief: for every stale citation it carries the status, the unified
@@ -86,14 +100,18 @@ the natural home is a pull request to `main`:
        | tee -a "$GITHUB_STEP_SUMMARY"
 ```
 
-Deliberately not a blocking pre-commit hook. Code moves fast, and a docs check on the fast
-path just teaches everyone to pass `--no-verify`. Drift is a review-time concern.
+> [!CAUTION]
+> Deliberately not a blocking pre-commit hook. Code moves fast, and a docs check on the
+> fast path just teaches everyone to pass `--no-verify`. Drift is a review-time concern.
 
 Pull-request checks, scheduled refreshes, advisory agent hooks, and the rule for which
 decks deserve automation at all (a sprint update is *supposed* to freeze) are in
 [`skills/slideops/references/automation.md`](../skills/slideops/references/automation.md).
 
 ## What a clean check doesn't prove
+
+> [!WARNING]
+> A green run means the quoted code still matches. It does not mean the deck is right.
 
 `check` verifies that quoted source still matches the code. It can't see that the prose
 around a snippet has quietly become wrong, that a slide is missing a subsystem added last

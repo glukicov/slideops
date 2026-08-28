@@ -1,4 +1,10 @@
+<div align="center">
+
 # SlideOps
+
+**Generate a deck from your code in minutes.<br>
+Find out in milliseconds when it stops being true.<br>
+Then rebuild only the slides that drifted.**
 
 [![CI](https://github.com/glukicov/slideops/actions/workflows/ci.yml/badge.svg)](https://github.com/glukicov/slideops/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/glukicov/slideops?color=7a7f1f)](https://github.com/glukicov/slideops/releases)
@@ -7,14 +13,15 @@
 [![Zero dependencies](https://img.shields.io/badge/dependencies-none-success)](.github/workflows/ci.yml)
 [![Agent Skill](https://img.shields.io/badge/Claude%20Code-Agent%20Skill-D97757)](https://agentskills.io/specification)
 
-**Generate a deck from your code in minutes. Find out in milliseconds when it stops being
-true. Then rebuild only the slides that drifted.**
+**[Install](#install) · [Use](#use) · [Features](#features) · [Docs](#documentation) · [Demo deck](https://github.com/glukicov/slideops/releases/latest/download/skill-demo.pdf)**
+
+</div>
 
 ![The same slide rendered in Ledger Light and Ledger Dark, split diagonally](docs/hero.png)
 
-*The demo deck is 17 slides about SlideOps, built by SlideOps: open the
-[HTML](skills/slideops/examples/skill-demo.html) or the
-[PDF](https://github.com/glukicov/slideops/releases/latest/download/skill-demo.pdf).*
+<div align="center"><i>The demo deck is 17 slides about SlideOps, built by SlideOps: open the
+<a href="skills/slideops/examples/skill-demo.html">HTML</a> or the
+<a href="https://github.com/glukicov/slideops/releases/latest/download/skill-demo.pdf">PDF</a>.</i></div>
 
 Writing documentation isn't the bottleneck any more. Keeping it true is. The deck that said
 we run two database migrations still says two, a year after we started running ten 😅.
@@ -25,7 +32,7 @@ code: it's built from a source, and it records which source it came from.
 
 ![The demo deck's overview grid](docs/overview.png)
 
-*Press Esc in any deck for the overview grid.*
+<div align="center"><i>Press Esc in any deck for the overview grid.</i></div>
 
 ## Install
 
@@ -47,6 +54,11 @@ git clone https://github.com/glukicov/slideops && cd slideops
 All four agents read `SKILL.md` and nothing needs porting between them. For the symlink and
 snapshot installs, the per-agent table and how updates reach you, see
 **[docs/install.md](docs/install.md)**.
+
+> [!NOTE]
+> Third-party marketplaces have **auto-update off by default**. Turn it on once in
+> `/plugin` → **Marketplaces**, or new versions only arrive when you run
+> `/plugin marketplace update slideops` by hand.
 
 ## Use
 
@@ -92,10 +104,9 @@ regenerating the deck, so the pacing and narrative you signed off on the first t
   map those onto the token roles.
 
   | Ledger Light (default) | Ledger Dark |
-  |---|---|
+  |:---:|:---:|
   | ![Ledger Light](docs/theme-light.png) | ![Ledger Dark](docs/theme-dark.png) |
-
-  *Same deck, same markup, same content.*
+  | *Same deck, same markup, same content.* | *One `:root` block apart.* |
 
 - **Mermaid diagrams** pre-rendered to inline SVG at build time and themed from the deck's
   own tokens, so the deck stays dependency-free.
@@ -105,12 +116,12 @@ regenerating the deck, so the pacing and narrative you signed off on the first t
 
 ## Documentation
 
-| | |
+| Page | What's in it |
 |---|---|
-| [docs/install.md](docs/install.md) | Every install path, all four agents, updating, requirements, what gets installed |
-| [docs/freshness.md](docs/freshness.md) | Citations, the status table, the cost model, where to automate, the accuracy contract, what never reaches a slide |
-| [docs/development.md](docs/development.md) | Working on this repository: the gate, CI guards, generated artifacts, releasing |
-| [CHANGELOG.md](CHANGELOG.md) | What changed in each release |
+| 📦 **[Install](docs/install.md)** | Every install path, all four agents, updating, requirements, what gets installed |
+| 🔎 **[Freshness](docs/freshness.md)** | Citations, the status table, the cost model, where to automate, the accuracy contract, what never reaches a slide |
+| 🛠️ **[Development](docs/development.md)** | Working on this repository: the gate, CI guards, generated artifacts, releasing |
+| 📋 **[Changelog](CHANGELOG.md)** | What changed in each release |
 
 Inside the skill, `skills/slideops/references/` holds the specifications the agent reads:
 freshness, automation, style, themes, diagrams and verification.
@@ -128,3 +139,12 @@ holds.
 
 MIT. See [LICENSE](LICENSE). Use it, fork it, ship it commercially; attribution is the only
 condition. The decks you generate are your own content either way.
+
+<div align="center">
+<br>
+
+**[Install](#install) · [Docs](docs/install.md) · [Changelog](CHANGELOG.md) · [Releases](https://github.com/glukicov/slideops/releases)**
+
+<sub>Built with SlideOps, about SlideOps. If a slide in this repo ever stops matching the code, <code>check.py</code> says so.</sub>
+
+</div>

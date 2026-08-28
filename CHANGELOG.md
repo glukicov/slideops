@@ -1,6 +1,8 @@
-# Changelog
+# 📋 Changelog
 
-## 1.0.0 - 2026-08-24
+<sub>[← README](README.md) · [Install](docs/install.md) · [Freshness](docs/freshness.md) · [Development](docs/development.md) · **Changelog**</sub>
+
+## [1.0.0](https://github.com/glukicov/slideops/releases/tag/v1.0.0) - 2026-08-24
 
 First public release, MIT licensed. Two skills: `slideops` (repository to slide deck) and
 `slides-to-pdf` (any hash-navigated HTML deck to a verified PDF).

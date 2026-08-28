@@ -1,4 +1,6 @@
-# Installing SlideOps
+# 📦 Installing SlideOps
+
+<sub>[← README](../README.md) · **Install** · [Freshness](freshness.md) · [Development](development.md) · [Changelog](../CHANGELOG.md)</sub>
 
 Four ways in, depending on which agent you use and whether you want updates to arrive on
 their own. If you're on Claude Code, take the first one.
@@ -14,9 +16,10 @@ This repository is its own marketplace, so those two lines are the whole setup. 
 checks for new versions in the background after a session starts and prompts you to run
 `/reload-plugins` when one lands.
 
-One thing worth doing once: third-party marketplaces have **auto-update off by default**.
-Turn it on in `/plugin` → **Marketplaces**, or you'll only get new versions when you run
-`/plugin marketplace update slideops` by hand.
+> [!TIP]
+> One thing worth doing once: third-party marketplaces have **auto-update off by default**.
+> Turn it on in `/plugin` → **Marketplaces**, or you'll only get new versions when you run
+> `/plugin marketplace update slideops` by hand.
 
 ## Git checkout you can pull
 
@@ -84,6 +87,11 @@ fails if it ever disagrees with the skill's own `metadata.version`.
 
 ## What gets installed
 
+<details>
+<summary><b>The full tree, annotated</b> — two skills, two scripts, six reference files</summary>
+
+<br>
+
 ```
 .claude-plugin/
 ├── plugin.json              # name + version: bumping version is what ships an update
@@ -108,6 +116,8 @@ skills/slideops/             # the main skill
 skills/slides-to-pdf/        # companion skill, usable standalone
 └── SKILL.md                 # any hash-navigated HTML deck → verified page-per-slide PDF
 ```
+
+</details>
 
 The scripts ship **inside** the skill, so `~/.claude/skills/slideops/scripts/check.py`
 exists on any machine that installed it. If a repository owns decks, vendor `check.py` into
