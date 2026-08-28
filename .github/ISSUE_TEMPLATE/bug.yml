@@ -1,0 +1,95 @@
+name: Bug report
+description: Something behaved differently from what the skill says it does.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Everything below is asked because answering it later costs a round trip. If a field
+        genuinely does not apply, say so and move on.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you asked for, what you got, and what you expected instead.
+      placeholder: |
+        I asked for a deck about the auth subsystem. The intake asked me for the theme
+        twice, once before the outline and again after.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: agent
+    attributes:
+      label: Which agent
+      options:
+        - Claude Code
+        - Codex
+        - Copilot CLI
+        - OpenCode
+        - Other (say which in the box above)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: How it is installed
+      description: This changes which copy of the skill is actually running.
+      options:
+        - Claude Code plugin (/plugin install slideops@slideops)
+        - ./install.sh (symlink)
+        - ./install.sh --copy (snapshot)
+        - Symlinked by hand
+        - Copied by hand
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: SlideOps version and agent version
+      description: >
+        The skill's version is `metadata.version` in `SKILL.md`. On the plugin install,
+        `/plugin` shows it too.
+      placeholder: "SlideOps 1.0.0, Claude Code 2.x"
+    validations:
+      required: true
+
+  - type: input
+    id: platform
+    attributes:
+      label: OS and Python
+      description: "`python3 --version`, and the OS you are on."
+      placeholder: "macOS 15.4 (arm64), Python 3.13.1"
+    validations:
+      required: true
+
+  - type: input
+    id: chrome
+    attributes:
+      label: Chrome path, if this is about rendering, screenshots or PDF export
+      description: >
+        The skill discovers Chrome across a few locations and this is where it most often
+        goes wrong on a platform I have not seen. Paste the path it found, or the error it
+        printed when it could not find one.
+      placeholder: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+
+  - type: textarea
+    id: check-output
+    attributes:
+      label: check.py output, if this is about drift
+      description: >
+        Run `python3 scripts/check.py <deck.html> --repo .` and paste the whole thing. Add
+        `--json` if a status looks wrong: it carries the diff and the commits behind it.
+      render: text
+
+  - type: textarea
+    id: deck
+    attributes:
+      label: The deck, or the part of it that matters
+      description: >
+        A deck is a single HTML file with no external assets, so it attaches to a comment.
+        If it quotes code you cannot share, a screenshot of the slide and the surrounding
+        markup is enough. Do not paste anything you would not put on a public slide.
