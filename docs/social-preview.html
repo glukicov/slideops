@@ -1,0 +1,110 @@
+<!doctype html>
+<!--
+  SlideOps social preview — the GitHub repo card (Settings -> General -> Social preview).
+  1280x640, the size GitHub crops to and the one Slack, LinkedIn and Twitter unfurl.
+  Keep every element inside a 40pt border; the crop is not identical on every consumer.
+
+  Rebuild (from the repo root):
+
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+      --headless=new --disable-gpu --hide-scrollbars --force-device-scale-factor=1 \
+      --window-size=1280,640 --screenshot=docs/social-preview.png "file://$PWD/docs/social-preview.html"
+
+    uv run --with pillow python -c "from PIL import Image; \
+      Image.open('docs/social-preview.png').convert('RGB') \
+        .quantize(colors=256).save('docs/social-preview.png', optimize=True)"
+
+  The quantize pass is not optional: the raw screenshot is ~240 KB and this is a repo
+  that ships as a plugin payload on every install and every update.
+  Palette is Ledger Light from skills/slideops/references/themes.md.
+-->
+<meta charset="utf-8">
+<title>SlideOps social preview</title>
+<style>
+  :root{
+    --bg:#faf6ee; --bg2:#f2ecdf; --card:#ffffff;
+    --fg:#2b2620; --text:#3d372e; --strong:#171310; --muted:#8a8069;
+    --accent:#7a7f1f; --accent2:#5f6419; --warn:#8a6a12; --bad:#a34a3f;
+    --border:rgba(138,128,105,.32);
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    --mono:"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{width:1280px;height:640px;overflow:hidden;}
+  body{
+    font-family:var(--font);color:var(--text);
+    background:radial-gradient(ellipse at 18% 0%, #fffdf7 0%, var(--bg) 45%, var(--bg2) 100%);
+  }
+  .frame{width:1280px;height:640px;padding:60px 72px;display:flex;align-items:center;gap:56px;}
+  .left{flex:1 1 660px;min-width:0;}
+  .kicker{
+    font-size:17px;font-weight:800;letter-spacing:.16em;color:var(--accent2);
+    display:flex;align-items:center;gap:12px;margin-bottom:22px;text-transform:uppercase;
+  }
+  .kicker:before{content:"";width:34px;height:4px;border-radius:2px;background:var(--accent);}
+  h1{
+    font-size:116px;line-height:.94;font-weight:800;letter-spacing:-.035em;
+    background:linear-gradient(96deg,var(--fg) 12%,var(--accent) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    margin-bottom:26px;
+  }
+  .tag{font-size:33px;line-height:1.38;color:var(--text);font-weight:500;max-width:640px;}
+  .tag b{color:var(--strong);font-weight:800;}
+  .foot{
+    margin-top:34px;font-size:16.5px;font-weight:700;letter-spacing:.1em;color:var(--muted);
+    text-transform:uppercase;
+  }
+  .foot span{color:var(--accent2);}
+
+  .card{
+    flex:0 0 452px;background:var(--card);border:1px solid var(--border);border-radius:16px;
+    box-shadow:0 18px 44px rgba(60,50,30,.14);overflow:hidden;
+  }
+  .card-top{
+    display:flex;align-items:center;gap:9px;padding:14px 20px;
+    border-bottom:1px solid var(--border);background:#fdfbf6;
+  }
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--border);}
+  .card-top .cmd{
+    margin-left:8px;font-family:var(--mono);font-size:14.5px;color:var(--muted);font-weight:600;
+  }
+  .rows{padding:20px 20px 22px;}
+  .row{padding:16px 0;border-bottom:1px dashed var(--border);}
+  .row:last-child{border-bottom:0;padding-bottom:2px;}
+  .status{
+    font-family:var(--mono);font-size:24px;font-weight:800;letter-spacing:.02em;display:block;margin-bottom:6px;
+  }
+  .s-current{color:var(--accent2);}
+  .s-moved{color:var(--warn);}
+  .s-changed{color:var(--bad);}
+  .path{font-family:var(--mono);font-size:15.5px;color:var(--muted);letter-spacing:-.01em;}
+  .path em{font-style:normal;color:var(--text);}
+</style>
+<div class="frame">
+  <div class="left">
+    <div class="kicker">Agent Skill</div>
+    <h1>SlideOps</h1>
+    <p class="tag">Turn a repo into a deck &mdash; that tells you<br><b>when it stops matching the code.</b></p>
+    <div class="foot">Claude Code <span>&middot;</span> Codex <span>&middot;</span> Copilot CLI <span>&middot;</span> OpenCode</div>
+  </div>
+  <div class="card">
+    <div class="card-top">
+      <i class="dot"></i><i class="dot"></i><i class="dot"></i>
+      <span class="cmd">slideops check</span>
+    </div>
+    <div class="rows">
+      <div class="row">
+        <span class="status s-current">CURRENT</span>
+        <span class="path">slide 7 &nbsp;<em>app/main.py:40-58</em></span>
+      </div>
+      <div class="row">
+        <span class="status s-moved">MOVED</span>
+        <span class="path">slide 12 &nbsp;<em>alembic/env.py</em> &rarr; 22-35</span>
+      </div>
+      <div class="row">
+        <span class="status s-changed">CHANGED</span>
+        <span class="path">slide 15 &nbsp;<em>middleware/rate.py</em> &nbsp;4 lines</span>
+      </div>
+    </div>
+  </div>
+</div>
