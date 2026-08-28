@@ -19,9 +19,9 @@ Then rebuild only the slides that drifted.**
 
 ![The same slide rendered in Ledger Light and Ledger Dark, split diagonally](docs/hero.png)
 
-<div align="center"><i>The demo deck is 17 slides about SlideOps, built by SlideOps: open the
+<p align="center"><i>The demo deck is 17 slides about SlideOps, built by SlideOps: open the
 <a href="skills/slideops/examples/skill-demo.html">HTML</a> or the
-<a href="https://github.com/glukicov/slideops/releases/latest/download/skill-demo.pdf">PDF</a>.</i></div>
+<a href="https://github.com/glukicov/slideops/releases/latest/download/skill-demo.pdf">PDF</a>.</i></p>
 
 Writing documentation isn't the bottleneck any more. Keeping it true is. The deck that said
 we run two database migrations still says two, a year after we started running ten 😅.
@@ -32,7 +32,7 @@ code: it's built from a source, and it records which source it came from.
 
 ![The demo deck's overview grid](docs/overview.png)
 
-<div align="center"><i>Press Esc in any deck for the overview grid.</i></div>
+<p align="center"><i>Press Esc in any deck for the overview grid.</i></p>
 
 ## Install
 

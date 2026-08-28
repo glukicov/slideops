@@ -12,11 +12,11 @@ which ships inside the skill and wins if the two ever disagree.
 
 ```mermaid
 flowchart LR
-    A["📁 Repository"] -->|"build"| B["🖥️ Deck<br><sub>every snippet carries<br>path + lines + hash</sub>"]
-    B -->|"months pass"| C{"🔎 check.py<br><sub>0 tokens, ms</sub>"}
-    C -->|"CURRENT"| D["✅ Nothing to do"]
-    C -->|"MOVED"| E["🔁 Re-quote<br><sub>automatable</sub>"]
-    C -->|"CHANGED · MISSING"| F["🧠 Agent repairs<br>just those slides"]
+    A["Repository"] -->|build| B["Deck<br>every snippet carries<br>path + lines + hash"]
+    B -->|months pass| C{"check.py<br>0 tokens, milliseconds"}
+    C -->|CURRENT| D["Nothing to do"]
+    C -->|MOVED| E["Re-quote<br>automatable"]
+    C -->|"CHANGED, MISSING"| F["Agent repairs only<br>the slides that drifted"]
     E --> B
     F --> B
 ```
