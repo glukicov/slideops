@@ -9,7 +9,7 @@
 [![Zero dependencies](https://img.shields.io/badge/dependencies-none-success)](.github/workflows/ci.yml)
 [![Agent Skill](https://img.shields.io/badge/Claude%20Code-Agent%20Skill-D97757)](https://agentskills.io/specification)
 
-**[Install](#install) · [Use](#use) · [Features](#features) · [Docs](#documentation) · [Demo deck](https://github.com/glukicov/slideops/releases/latest/download/skill-demo.pdf)**
+**[Install](#install) · [Use](#use) · [Features](#features) · [Docs](#documentation) · [Demo deck](https://github.com/glukicov/slideops/releases/latest/download/skill-demo.pdf) · [Why](https://medium.com/@lukicov/your-documentation-is-a-build-artifact-start-treating-it-like-one-ab48df61b1e0)**
 
 </div>
 
@@ -25,6 +25,9 @@ we run two database migrations still says two, a year after we started running t
 SlideOps is a pair of [Agent Skills](https://agentskills.io/specification) for Claude Code
 and compatible coding agents. It treats a generated document the way you'd treat generated
 code: it's built from a source, and it records which source it came from.
+
+The reasoning behind it is written up in
+**[Your documentation is a build artifact. Start treating it like one](https://medium.com/@lukicov/your-documentation-is-a-build-artifact-start-treating-it-like-one-ab48df61b1e0)**.
 
 ![The demo deck's overview grid](docs/overview.png)
 
