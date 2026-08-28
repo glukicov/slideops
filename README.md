@@ -1,6 +1,6 @@
 <div align="center">
 
-<sub>Generate a deck from your code in minutes. Find out in milliseconds when it stops being true. Then rebuild only the slides that drifted.</sub>
+<h2>Generate a deck from your code in minutes. Find out in milliseconds when it stops being true. Then rebuild only the slides that drifted.</h2>
 
 [![CI](https://github.com/glukicov/slideops/actions/workflows/ci.yml/badge.svg)](https://github.com/glukicov/slideops/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/glukicov/slideops?color=7a7f1f)](https://github.com/glukicov/slideops/releases)
