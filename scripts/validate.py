@@ -127,6 +127,8 @@ def check_html(path: Path, *, is_template: bool) -> None:
         for placeholder in ("[DECK TITLE]", "[Slide title]", "[Section name]"):
             if placeholder in html:
                 fail(path, f"unfilled placeholder {placeholder}")
+        if 'class="img-placeholder"' in html:
+            fail(path, "empty image slot: replace .img-placeholder with the real <img>")
         if "—" in re.sub(r"<pre.*?</pre>", "", html, flags=re.S):
             fail(path, "em dash in prose (allowed only inside verbatim snippets)")
 

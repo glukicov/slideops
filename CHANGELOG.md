@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 — 2026-08-24
+## 1.0.0 - 2026-08-24
 
 First public release, MIT licensed. Two skills: `slideops` (repository to slide deck) and
 `slides-to-pdf` (any hash-navigated HTML deck to a verified PDF).
@@ -16,14 +16,14 @@ First public release, MIT licensed. Two skills: `slideops` (repository to slide 
 - **Runs on Codex, Copilot CLI and OpenCode too**, which all read `~/.agents/skills`.
   `./install.sh` places both skills where each agent looks, and CI asserts that it does.
   No porting is involved: the frontmatter is the subset all four accept, and the scripts
-  are standard library only, so there is nothing to install anywhere. Claude Code is the
+  are standard library only, so there's nothing to install anywhere. Claude Code is the
   only one of the four with a marketplace, and so the only install that updates itself.
 - Skills live under `skills/<name>/SKILL.md`, the layout the plugin system expects.
 
-The skill was developed by having independent agents follow it verbatim and file friction
+I built this by having independent agents follow the skill verbatim and file friction
 reports, three rounds deep, until a cold run produced a deck with zero failures. Seven
-decks were built against a real repository along the way; the fixes below came from those
-runs, not from speculation.
+decks went up against a real repository along the way, and the fixes below came out of
+those runs rather than out of speculation.
 
 **The workflow**
 - Guided intake: the skill scans the repository before asking anything, then proposes
@@ -58,7 +58,7 @@ runs, not from speculation.
   source lines at build time; the deck records its build commit in a meta tag.
 - `skills/slideops/scripts/check.py` reports each citation as CURRENT / MOVED / CHANGED /
   MISSING / UNVERIFIED, telling a pure line-number shift apart from a real content
-  change. It sweeps whole folders (`check.py docs/slides/`), and is standard library
+  change. It sweeps whole folders (`check.py docs/slides/`), and it's standard library
   only: no model, no network, no tokens.
 - `--suggest` prints the diff, the commits responsible, the corrected citation and the
   current source ready to paste. `--json` emits a full repair brief for an agent.
@@ -79,7 +79,7 @@ runs, not from speculation.
   and a redaction scan over the finished HTML, PDF, notes, and embedded images.
 - The intake asks who will see the deck, so the redaction bar matches the audience.
 - Chrome keeps its sandbox: no `--no-sandbox` anywhere by default, with a documented
-  fallback for containers that cannot grant user namespaces.
+  fallback for containers that can't grant user namespaces.
 - Pinned, optional downloads: `mermaid-cli` is version-pinned and skipped when already
   installed, and the PDF verifier reuses an existing `pypdfium2` before creating a venv.
 
@@ -91,12 +91,12 @@ runs, not from speculation.
   deletes it, then asserts the status the tools report.
 - `scripts/validate.py` and `scripts/smoke_test.py` for skill structure and the render/PDF
   pipeline. `smoke_test.py --pdf-out PATH` keeps the verified PDF, which is how the demo
-  PDF is built for the release: it is an artifact of the deck, so it is attached to each
-  release instead of tracked here, and a `/plugin install` does not download 6.6 MB it can
+  PDF is built for the release: it's an artifact of the deck, so it's attached to each
+  release instead of tracked here, and a `/plugin install` doesn't download 6.6 MB it can
   regenerate.
-- CI additionally installs the skill the way a user does, both by hand and through
+- CI also installs the skill the way a user does, both by hand and through
   `install.sh`, and runs both scripts on bare Python, so the standard-library-only promise
-  cannot quietly break.
+  can't quietly break.
 - Python 3.14, a single version with no build matrix, for the repository and every CI job.
 - `compatibility:` frontmatter on both skills; no `allowed-tools`, deliberately.
 

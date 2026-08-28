@@ -5,7 +5,12 @@ description = "Agent Skills that turn a repository into a slide deck and tell yo
 readme = "README.md"
 requires-python = ">=3.14"
 license = { file = "LICENSE" }
+authors = [{ name = "Gleb Lukicov" }]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/glukicov/slideops"
+Author = "https://github.com/glukicov"
 
 [dependency-groups]
 dev = [

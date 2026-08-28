@@ -73,7 +73,7 @@ fix.
 Two reasons not to screenshot the deck in place: relative image paths (`../img/...`)
 break the moment screenshots need the HTML somewhere else, and the printed pages must not
 show interactive-only chrome (nav buttons, progress bar, hints). Decks whose images are
-inlined as `data:` URIs skip the path problem but still need the chrome hidden — build
+inlined as `data:` URIs skip the path problem but still need the chrome hidden, so build
 the export copy either way:
 
 ```bash

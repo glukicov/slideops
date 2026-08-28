@@ -130,6 +130,7 @@
   .img-wrap{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;}
   .img-wrap img{max-width:100%;max-height:100%;object-fit:contain;border-radius:10px;border:1px solid var(--card-border);background:var(--img-bg);}
   .img-wrap svg{max-width:100%;max-height:100%;height:auto;}
+  .img-placeholder{flex:1;align-self:stretch;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;border:2px dashed var(--card-border);border-radius:10px;color:var(--muted);font-size:15px;}
   .caption{text-align:center;color:var(--muted);font-size:15px;margin-top:10px;}
 
   .list-check li{list-style:none;position:relative;padding-left:26px;}
@@ -242,7 +243,9 @@
     <section class="slide">
       <div class="kicker">[Section name]</div>
       <h2>[Slide title]</h2>
-      <div class="img-wrap"><img src="[relative/or/absolute/path.png]" alt="[Descriptive alt text]"></div>
+      <!-- Swap the placeholder div for the real image, keeping .img-wrap around it:
+           <img src="relative/or/absolute/path.png" alt="[Descriptive alt text]"> -->
+      <div class="img-wrap"><div class="img-placeholder">[Real screenshot, chart or artifact from the repo. Never a fabricated one.]</div></div>
       <p class="caption">[What this image shows, in one sentence: real numbers only, taken from the actual image/data.]</p>
     </section>
 

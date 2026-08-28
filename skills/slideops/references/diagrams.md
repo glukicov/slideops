@@ -28,7 +28,7 @@ in them land in a shipped artifact, so the confidentiality rule applies to them 
    copy the literal values; mermaid can't read CSS variables):
 
 ```json
-// $STAGE/mermaid-config.json — values from the DECK'S CURRENT THEME, not hardcoded olive
+// $STAGE/mermaid-config.json: values from the DECK'S CURRENT THEME, not hardcoded olive
 {
   "theme": "base",
   "themeVariables": {

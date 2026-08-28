@@ -158,7 +158,7 @@ block.
 
 ```bash
 #!/bin/sh
-# .git/hooks/pre-commit — advisory, never blocking
+# .git/hooks/pre-commit: advisory, never blocking
 python3 tools/slideops-check.py docs/slides/ --repo . --quiet --exit-zero
 exit 0
 ```
