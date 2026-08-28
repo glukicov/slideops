@@ -1,0 +1,7 @@
+# Most inbound on a plugin is "how do I make it do X", which is not a bug. Routing those
+# to Discussions keeps the issue count meaning what it looks like it means.
+blank_issues_enabled: false
+contact_links:
+  - name: Question, idea, or a deck you built
+    url: https://github.com/glukicov/slideops/discussions
+    about: How do I make it do X, theme and pattern requests, and show us what came out.
