@@ -86,7 +86,7 @@ jobs:
       - name: Install Chromium
         run: npx --yes playwright@1.49.0 install --with-deps chromium
       - name: Install smoke test deps
-        run: pip install --quiet 'pypdfium2==4.30.0' 'Pillow==11.0.0' 'typer>=0.15'
+        run: pip install --quiet 'pypdfium2==4.30.0' 'Pillow==12.3.0' 'typer>=0.15'
       - name: Render every slide and export a verified PDF
         run: python3 scripts/smoke_test.py
       - name: Upload rendered slides on failure
