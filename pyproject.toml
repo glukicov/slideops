@@ -19,7 +19,7 @@ dev = [
   "ty>=0.0.1a1",
   "pre-commit>=4.0",
   "typer>=0.15",
-  "pypdfium2==4.30.0",
+  "pypdfium2==5.13.0",
   "Pillow>=11.0",
 ]
 
