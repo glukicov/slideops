@@ -10,17 +10,6 @@ each status means to the agent all live in
 [`skills/slideops/references/freshness.md`](../skills/slideops/references/freshness.md),
 which ships inside the skill and wins if the two ever disagree.
 
-```mermaid
-flowchart LR
-    A["Repository"] -->|build| B["Deck: every snippet carries path, lines and hash"]
-    B -->|months pass| C{"check.py: no model, no tokens, milliseconds"}
-    C -->|CURRENT| D["Nothing to do"]
-    C -->|MOVED| E["Re-quote: automatable"]
-    C -->|"CHANGED, MISSING"| F["Agent repairs only the slides that drifted"]
-    E --> B
-    F --> B
-```
-
 ## The mechanism
 
 Every quoted snippet records where it came from and what that source looked like at build

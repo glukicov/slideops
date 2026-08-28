@@ -1,10 +1,8 @@
 <div align="center">
 
-# SlideOps
-
-**Generate a deck from your code in minutes.<br>
-Find out in milliseconds when it stops being true.<br>
-Then rebuild only the slides that drifted.**
+<h1>SlideOps<br>
+<sub>Generate a deck from your code in minutes. Find out in milliseconds when it stops being true. Then rebuild only the slides that drifted.</sub>
+</h1>
 
 [![CI](https://github.com/glukicov/slideops/actions/workflows/ci.yml/badge.svg)](https://github.com/glukicov/slideops/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/glukicov/slideops?color=7a7f1f)](https://github.com/glukicov/slideops/releases)
@@ -118,10 +116,10 @@ regenerating the deck, so the pacing and narrative you signed off on the first t
 
 | Page | What's in it |
 |---|---|
-| 📦 **[Install](docs/install.md)** | Every install path, all four agents, updating, requirements, what gets installed |
-| 🔎 **[Freshness](docs/freshness.md)** | Citations, the status table, the cost model, where to automate, the accuracy contract, what never reaches a slide |
-| 🛠️ **[Development](docs/development.md)** | Working on this repository: the gate, CI guards, generated artifacts, releasing |
-| 📋 **[Changelog](CHANGELOG.md)** | What changed in each release |
+| 📦&nbsp;**[Install](docs/install.md)** | Every install path, all four agents, updating, requirements, what gets installed |
+| 🔎&nbsp;**[Freshness](docs/freshness.md)** | Citations, the status table, the cost model, where to automate, the accuracy contract, what never reaches a slide |
+| 🛠️&nbsp;**[Development](docs/development.md)** | Working on this repository: the gate, CI guards, generated artifacts, releasing |
+| 📋&nbsp;**[Changelog](CHANGELOG.md)** | What changed in each release |
 
 Inside the skill, `skills/slideops/references/` holds the specifications the agent reads:
 freshness, automation, style, themes, diagrams and verification.
