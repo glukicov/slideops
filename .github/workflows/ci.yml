@@ -6,6 +6,11 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Nothing here writes to the repository. Pinned in the workflow so it cannot drift
+# if the repository-level default token is ever widened.
+permissions:
+  contents: read
+
 jobs:
   quality:
     name: Lint, types and tests

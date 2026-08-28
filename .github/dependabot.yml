@@ -1,0 +1,16 @@
+# The skills ship with no dependencies. This watches the two places a supply-chain
+# problem could actually reach this repository: the Actions pinned in ci.yml, and the
+# dev toolchain in pyproject.toml / uv.lock.
+#
+# Monthly, not weekly: a solo repository with weekly bumps trains you to ignore the tab.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: monthly
