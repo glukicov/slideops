@@ -7,7 +7,10 @@ behaviour against a real git repository lives in test_freshness.py.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
+
+import pytest
 
 import check
 
@@ -89,6 +92,91 @@ class TestFindCitations:
         deck = '<!-- 0: TITLE -->\n<!-- 1: DEEP-DIVE -->\n<pre data-src="a.py:1" data-sha256="abc123">x</pre>'
         (citation,) = check.find_citations(deck)
         assert citation.slide_label == "DEEP-DIVE"
+
+
+DOC = """<!-- slideops-build commit=abc1234 date=2026-08-31 repo=demo -->
+# Title
+
+## The request path
+
+<!-- slideops data-src="app/main.py:40-58" data-sha256="a1b2c3d4e5f6" -->
+```python
+def main() -> int:
+    return 0  # not a heading: # nope
+```
+
+## Teaching the syntax
+
+An example of the citation comment, quoted inside a fence:
+
+```markdown
+<!-- slideops data-src="fake/example.py:1-2" data-sha256="000000000000" -->
+<!-- slideops-build commit=fffffff date=1999-01-01 repo=fake -->
+```
+"""
+
+
+class TestMaskFences:
+    def test_fenced_content_is_blanked_but_offsets_survive(self) -> None:
+        masked = check.mask_fences(DOC)
+        assert len(masked) == len(DOC)
+        assert "def main" not in masked
+        assert "## The request path" in masked
+        assert "## Teaching the syntax" in masked
+
+    def test_a_longer_closing_fence_still_closes(self) -> None:
+        text = "````\ninner ``` fence\n````\nafter\n"
+        masked = check.mask_fences(text)
+        assert "inner" not in masked
+        assert "after" in masked
+
+    def test_tildes_open_and_close_too(self) -> None:
+        masked = check.mask_fences("~~~\nhidden\n~~~\nshown\n")
+        assert "hidden" not in masked
+        assert "shown" in masked
+
+
+class TestFindCitationsMd:
+    def test_citation_attaches_to_the_nearest_heading(self) -> None:
+        (citation,) = check.find_citations_md(DOC)
+        assert citation.src == "app/main.py:40-58"
+        assert citation.recorded_sha == "a1b2c3d4e5f6"
+        assert citation.slide_label == "The request path"
+        assert citation.slide_index == 1
+        assert citation.display_slide == "2"
+
+    def test_examples_inside_fences_are_not_citations(self) -> None:
+        assert len(check.find_citations_md(DOC)) == 1
+
+    def test_citation_without_a_hash_is_still_found(self) -> None:
+        (citation,) = check.find_citations_md('<!-- slideops data-src="a.py:1-2" -->\n```python\nx\n```\n')
+        assert citation.recorded_sha is None
+        assert citation.slide_label == ""
+
+    def test_a_hash_inside_a_fence_is_not_a_heading(self) -> None:
+        doc = (
+            "# Real\n\n```bash\n# comment, not a heading\n```\n\n"
+            '<!-- slideops data-src="a.py:1" data-sha256="abc123" -->\n```python\nx\n```\n'
+        )
+        (citation,) = check.find_citations_md(doc)
+        assert citation.slide_label == "Real"
+
+
+class TestMdBuildMeta:
+    def test_comment_stamp_parses_like_the_meta_tag(self) -> None:
+        assert check.parse_build_meta(DOC, markdown=True) == {
+            "commit": "abc1234",
+            "date": "2026-08-31",
+            "repo": "demo",
+        }
+
+    def test_a_fenced_example_stamp_is_ignored(self) -> None:
+        doc = "# T\n\n```markdown\n<!-- slideops-build commit=fffffff date=1999-01-01 repo=fake -->\n```\n"
+        assert check.parse_build_meta(doc, markdown=True) == {}
+
+    def test_html_decks_are_unaffected(self) -> None:
+        html = '<meta name="slideops-build" content="commit=a9c9c0d date=2026-08-24 repo=svc">'
+        assert check.parse_build_meta(html) == {"commit": "a9c9c0d", "date": "2026-08-24", "repo": "svc"}
 
 
 class TestLocateMoved:
@@ -199,3 +287,45 @@ class TestCollectDecks:
     def test_empty_directory_is_reported(self, tmp_path: Path) -> None:
         _, problems = check.collect_decks([tmp_path])
         assert "no decks with citations" in problems[0]
+
+    def test_directory_finds_markdown_docs_with_citations(self, tmp_path: Path) -> None:
+        citation = '<!-- slideops data-src="a.py:1" data-sha256="abc123" -->\n```python\nx\n```\n'
+        (tmp_path / "doc.md").write_text(citation)
+        (tmp_path / "README.md").write_text("# Just a readme\n\nNo citations here.\n")
+        decks, problems = check.collect_decks([tmp_path])
+        assert [d.name for d in decks] == ["doc.md"]
+        assert problems == []
+
+    def test_markdown_that_only_quotes_the_syntax_is_skipped(self, tmp_path: Path) -> None:
+        (tmp_path / "reference.md").write_text(
+            '# How to cite\n\n```markdown\n<!-- slideops data-src="a.py:1" data-sha256="abc123" -->\n```\n'
+        )
+        decks, problems = check.collect_decks([tmp_path])
+        assert decks == []
+        assert "no decks with citations" in problems[0]
+
+    def test_a_stamped_doc_without_citations_is_still_swept(self, tmp_path: Path) -> None:
+        (tmp_path / "doc.md").write_text("<!-- slideops-build commit=abc1234 date=2026-08-31 repo=demo -->\n# T\n")
+        decks, _ = check.collect_decks([tmp_path])
+        assert [d.name for d in decks] == ["doc.md"]
+
+
+class TestDocReport:
+    def test_a_markdown_doc_reports_sections_not_slides(self, tmp_path: Path, capsys: object) -> None:
+        doc = tmp_path / "doc.md"
+        doc.write_text(DOC)
+        report = check.check_deck(doc, tmp_path)
+        assert report.kind == "doc"
+        assert report.noun == "section"
+
+    def test_an_html_deck_still_reports_slides(self, tmp_path: Path) -> None:
+        deck = tmp_path / "deck.html"
+        deck.write_text('<pre data-src="a.py:1" data-sha256="abc123">x</pre>')
+        assert check.check_deck(deck, tmp_path).noun == "slide"
+
+    def test_json_payload_carries_the_kind(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        doc = tmp_path / "doc.md"
+        doc.write_text(DOC)
+        check.emit_json([check.check_deck(doc, tmp_path)], tmp_path)
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["decks"][0]["kind"] == "doc"

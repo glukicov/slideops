@@ -44,8 +44,11 @@ jobs:
       - name: Structural and frontmatter checks
         run: uv run python scripts/validate.py
 
-      - name: Citations in the example deck still match this repo
-        run: uv run python skills/slideops/scripts/check.py skills/slideops/examples/skill-demo.html --repo .
+      - name: Citations in the example deck and doc still match this repo
+        run: |
+          uv run python skills/slideops/scripts/check.py \
+            skills/slideops/examples/skill-demo.html \
+            skills/slideops/examples/skill-demo.md --repo .
 
   skill-portability:
     name: Skills run on bare Python
@@ -66,8 +69,10 @@ jobs:
       - name: check.py and cite.py work with no dependencies
         run: |
           python3 ~/.claude/skills/slideops-installed/scripts/cite.py README.md:1-3 --repo .
+          python3 ~/.claude/skills/slideops-installed/scripts/cite.py README.md:1-3 --repo . --md
           python3 ~/.claude/skills/slideops-installed/scripts/check.py \
-            skills/slideops/examples/skill-demo.html --repo .
+            skills/slideops/examples/skill-demo.html \
+            skills/slideops/examples/skill-demo.md --repo .
 
       - name: install.sh reaches every agent directory
         run: |

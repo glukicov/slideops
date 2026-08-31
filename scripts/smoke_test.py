@@ -54,6 +54,38 @@ def run_chrome(chrome: Path, *args: str) -> None:
         sys.exit(f"Chrome failed ({result.returncode}): {result.stderr.strip()[:500]}")
 
 
+PRINT_CSS = """<!doctype html><meta charset="utf-8"><style>
+  @page { size: A4; margin: 18mm 16mm; }
+  body { font: 11pt/1.55 -apple-system, "Segoe UI", Roboto, sans-serif; margin: 0; }
+  h1, h2, h3 { line-height: 1.25; page-break-after: avoid; }
+  pre { font: 8.5pt/1.45 ui-monospace, "SF Mono", Consolas, monospace;
+        padding: 8pt 10pt; border: 0.5pt solid #ccc; border-radius: 4pt;
+        white-space: pre-wrap; page-break-inside: avoid; }
+  img, svg { max-width: 100%; }
+  table { border-collapse: collapse; }
+  td, th { border: 0.5pt solid #999; padding: 3pt 8pt; }
+</style>
+"""
+
+
+def export_doc_pdf(chrome: Path, doc: Path, stage: Path) -> Path:
+    """The markdown-pdf.md pipeline, mechanised: convert, absolutise images, wrap, print."""
+    from markdown_it import MarkdownIt
+
+    body = MarkdownIt("commonmark").enable("table").render(doc.read_text())
+    body = re.sub(
+        r'src="(?!https?://|file://|data:)([^"]+)"',
+        lambda m: f'src="file://{(doc.parent / m.group(1)).resolve()}"',
+        body,
+    )
+    (stage / "doc-print.html").write_text(PRINT_CSS + body)
+    doc_pdf = stage / "doc-output.pdf"
+    run_chrome(chrome, f"--print-to-pdf={doc_pdf}", "--no-pdf-header-footer", f"file://{stage / 'doc-print.html'}")
+    if not doc_pdf.is_file():
+        sys.exit("Markdown doc PDF was not produced")
+    return doc_pdf
+
+
 app = typer.Typer(rich_markup_mode="markdown", add_completion=False)
 
 
@@ -162,6 +194,23 @@ def main(
         pdf_out.parent.mkdir(parents=True, exist_ok=True)
         pdf_out.write_bytes(pdf_path.read_bytes())
         print(f"Wrote {pdf_out} ({pdf_out.stat().st_size / 1_048_576:.1f} MB)")
+
+    doc = root / "skills" / "slideops" / "examples" / "skill-demo.md"
+    if not doc.is_file():
+        sys.exit(f"Example doc not found: {doc}")
+    doc_pdf_path = export_doc_pdf(chrome, doc, stage)
+    doc_pdf = pdfium.PdfDocument(doc_pdf_path)
+    if len(doc_pdf) < 2:
+        sys.exit(f"Doc PDF has only {len(doc_pdf)} page(s); the example doc should paginate")
+    for page_index in {0, len(doc_pdf) - 1}:
+        image = doc_pdf[page_index].render(scale=0.5).to_pil()
+        colours = image.convert("RGB").getcolors(maxcolors=256)
+        if colours is not None and len(colours) <= 1:
+            sys.exit(f"Doc PDF page {page_index + 1} rendered blank")
+    first_page_colours = doc_pdf[0].render(scale=0.5).to_pil().convert("RGB").getcolors(maxcolors=100_000)
+    if first_page_colours is not None and len(first_page_colours) < 50:
+        sys.exit("Doc PDF page 1 has too few colours; the embedded image likely failed to load")
+    print(f"Doc PDF verified: {len(doc_pdf)} pages, image page has real pixels")
 
     print("OK: render and export smoke test passed")
 

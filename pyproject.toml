@@ -1,6 +1,6 @@
 [project]
 name = "slideops"
-version = "1.0.0"
+version = "1.1.0"
 description = "Agent Skills that turn a repository into a slide deck and tell you when it stops matching the code"
 readme = "README.md"
 requires-python = ">=3.14"
@@ -20,6 +20,7 @@ dev = [
   "pre-commit>=4.0",
   "typer>=0.15",
   "pyyaml>=6.0",
+  "markdown-it-py>=3.0",
   "pypdfium2==5.13.0",
   "Pillow>=11.0",
 ]

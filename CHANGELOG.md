@@ -2,6 +2,37 @@
 
 <sub>[← README](README.md) · [Install](docs/install.md) · [Freshness](docs/freshness.md) · [Development](docs/development.md) · **Changelog**</sub>
 
+## [1.1.0](https://github.com/glukicov/slideops/releases/tag/v1.1.0) - 2026-08-31
+
+Markdown documentation mode: the citation and freshness mechanism now writes docs, not
+only decks.
+
+- **Markdown carrier.** A doc carries citations as HTML comments above fenced snippets
+  (`<!-- slideops data-src="…" data-sha256="…" -->`) and the build stamp as a comment on
+  line 1. Invisible on GitHub, native syntax highlighting, `mermaid` fences render with
+  no download.
+- **`check.py`** parses `.md` docs (fence-masked, so docs quoting the syntax never
+  miscount), attributes citations to the nearest heading, sweeps `.md` and `.html`
+  together, and reports `section N` for docs. JSON deck objects gain `"kind"`.
+- **`cite.py --md`** prints ready-to-paste comments and language-tagged fenced snippets
+  (the fence outgrows backtick runs in the source); `--stamp` on a `.md` writes the line-1
+  comment stamp.
+- **New skill prose**: `references/markdown.md` (the docs-mode contract),
+  `references/markdown-pdf.md` (verified print-paginated PDF export), and
+  `assets/template.md`.
+- **Worked example**: `examples/skill-demo.md`, cited against this repository and checked
+  by CI on both uv and bare Python; the smoke test also prints it to a verified PDF.
+- The freshness lifecycle tests now run every drift scenario against both carriers.
+
+## [1.0.1](https://github.com/glukicov/slideops/releases/tag/v1.0.1) - 2026-08-31
+
+- **Fix: strict YAML parsers dropped the `slideops` skill.** The unquoted frontmatter
+  description contained a colon-space, a ScannerError in every strict parser, so
+  `npx skills add glukicov/slideops` found only `slides-to-pdf`. The description is now
+  quoted, `validate.py` strict-parses every SKILL.md frontmatter so this class of bug
+  fails the build, and the README gained the skills.sh badge plus the one-line
+  `npx skills add glukicov/slideops` install path.
+
 ## [1.0.0](https://github.com/glukicov/slideops/releases/tag/v1.0.0) - 2026-08-24
 
 First public release, MIT licensed. Two skills: `slideops` (repository to slide deck) and

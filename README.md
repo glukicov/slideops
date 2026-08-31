@@ -82,6 +82,18 @@ If you already know what you want, skip the intake:
 > [!NOTE]
 > ### 💬 deep dive on the auth subsystem, Ledger Dark theme, 15 slides, with a PDF
 
+Prefer a document to a deck? Since v1.1.0 the same mechanism writes Markdown:
+
+> [!TIP]
+> ### 💬 write markdown docs for the sync subsystem
+
+You get a single `.md` that renders on GitHub, with every quoted snippet carrying an
+invisible citation comment (`<!-- slideops data-src="app/main.py:40-58"
+data-sha256="a1b2c3d4e5f6" -->`) above its fence, Mermaid diagrams as native fences, and
+the build commit stamped on line 1. The same `check.py` sweep verifies docs and decks
+together, and the same `--json` repair brief lets an agent regenerate only the sections
+that drifted. PDF export mirrors the deck path with a verified, print-paginated export.
+
 Months later, in the same repository:
 
 > [!IMPORTANT]
@@ -97,6 +109,10 @@ regenerating the deck, so the pacing and narrative you signed off on the first t
   reports which slides cite code that has changed, moved or vanished since the deck was
   built, then suggests the fix or hands an agent a JSON repair brief. No model, no network,
   no tokens: standard library Python, and it runs in milliseconds.
+- **Markdown docs with the same guarantee.** The `.md` carrier uses HTML comments instead
+  of attributes, headings instead of slide numbers, and shares every status, the sweep,
+  and the repair brief with decks. The worked example is
+  [`skill-demo.md`](skills/slideops/examples/skill-demo.md), checked by this repo's CI.
 - **One self-contained file per deck.** No build step, no CDN, works offline, attaches to
   an email.
 - **Navigation:** arrow keys, click-to-advance, URL hash deep links, an Esc-toggled

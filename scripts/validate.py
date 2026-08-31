@@ -132,6 +132,58 @@ def check_html(path: Path, *, is_template: bool) -> None:
             fail(path, "em dash in prose (allowed only inside verbatim snippets)")
 
 
+def mask_md_fences(text: str) -> tuple[str, bool]:
+    """Prose with fenced blocks blanked out, plus whether every fence was closed.
+
+    Same fence rules as the shipped check.py: ``` or ~~~ opens, a same-char run at least
+    as long closes, so an example doc can quote fences inside a longer outer fence.
+    """
+    kept: list[str] = []
+    fence = ""
+    for line in text.splitlines():
+        stripped = line.lstrip()
+        marker = ""
+        if stripped[:3] in ("```", "~~~"):
+            marker = stripped[0] * (len(stripped) - len(stripped.lstrip(stripped[0])))
+        if fence:
+            if marker and marker[0] == fence[0] and len(marker) >= len(fence):
+                fence = ""
+            kept.append("")
+        elif marker:
+            fence = marker
+            kept.append("")
+        else:
+            kept.append(line)
+    return "\n".join(kept), not fence
+
+
+MD_PLACEHOLDER_RE = re.compile(r"\[(?:DOC TITLE|[A-Za-z ]*name|Column|BRACKETED|One-paragraph[^\]]*|Prose[^\]]*)\]")
+MD_CITATION_RE = re.compile(r'<!--\s*slideops\s+data-src="[^"]+"(?P<sha>\s+data-sha256="[0-9a-f]{6,64}")?\s*-->')
+MD_BAD_CITATION_RE = re.compile(r"<!--\s*slideops\s(?!data-src=\")")
+
+
+def check_markdown(path: Path, *, is_template: bool) -> None:
+    text = path.read_text()
+    prose, closed = mask_md_fences(text)
+    if not closed:
+        fail(path, "unclosed code fence")
+
+    if is_template:
+        if "[DOC TITLE]" not in text:
+            fail(path, "template lost its [DOC TITLE] placeholder")
+        return
+
+    for placeholder in sorted({m.group(0) for m in MD_PLACEHOLDER_RE.finditer(text)}):
+        fail(path, f"unfilled placeholder {placeholder}")
+    if "—" in prose:
+        fail(path, "em dash in prose (allowed only inside code fences)")
+    for match in MD_BAD_CITATION_RE.finditer(prose):
+        fail(path, f"malformed slideops citation comment near offset {match.start()}")
+    for match in MD_CITATION_RE.finditer(prose):
+        if not match.group("sha"):
+            fail(path, "citation comment without data-sha256 (check.py reports it UNVERIFIED, not stale)")
+
+
 def check_plugin_manifests(root: Path) -> None:
     """The plugin manifest is what delivers updates: users only get a new version when
     `version` changes, so a stale or malformed manifest silently strands everyone."""
@@ -224,8 +276,16 @@ def main(
     else:
         fail(root, f"missing {SKILLS_DIR}/slideops/assets/template.html")
 
+    md_template = root / SKILLS_DIR / "slideops" / "assets" / "template.md"
+    if md_template.is_file():
+        check_markdown(md_template, is_template=True)
+    else:
+        fail(root, f"missing {SKILLS_DIR}/slideops/assets/template.md")
+
     for deck in sorted((root / SKILLS_DIR / "slideops" / "examples").glob("*.html")):
         check_html(deck, is_template=False)
+    for doc in sorted((root / SKILLS_DIR / "slideops" / "examples").glob("*.md")):
+        check_markdown(doc, is_template=False)
 
     if problems:
         print(f"FAIL: {len(problems)} problem(s)")

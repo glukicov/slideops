@@ -1,11 +1,11 @@
 ---
 name: slideops
-description: 'Use when the user asks for slides, a slide deck, or a presentation about a code repository, one of its subsystems, a feature, an architecture area, or its recent changes. Triggers include "make slides", "build a slide deck", "create a presentation", "HTML slides for this repo", "overview deck", "team update slides", "slides for our latest changes", or naming a topic and asking for a deck about it. Also use when the user asks whether an existing deck still matches the code, or wants one rechecked, refreshed, or kept in sync automatically: "is this deck still accurate", "check the slides against the code", "did anything we documented change", "refresh the architecture deck", "these docs are stale", "fail the build when the deck stops matching the code", or asks to wire that check into CI, a pull request, or an agent hook.'
+description: 'Use when the user asks for slides, a slide deck, or a presentation about a code repository, one of its subsystems, a feature, an architecture area, or its recent changes. Triggers include "make slides", "build a slide deck", "create a presentation", "HTML slides for this repo", "overview deck", "team update slides", "slides for our latest changes", or naming a topic and asking for a deck about it. Also use when the user asks whether an existing deck still matches the code, or wants one rechecked, refreshed, or kept in sync automatically: "is this deck still accurate", "check the slides against the code", "did anything we documented change", "refresh the architecture deck", "these docs are stale", "fail the build when the deck stops matching the code", or asks to wire that check into CI, a pull request, or an agent hook. Also use for Markdown documentation instead of slides ("write markdown docs", "a design doc with citations", "docs that know when they go stale"), including PDF export of a doc.'
 license: MIT
 compatibility: Needs a headless Chrome or Chromium binary (Playwright cache or system install) and Python 3 for the verification pass. Reads the target repository with git. Network access only if you opt into Mermaid diagrams (one npx download) or brand-colour extraction; everything else works offline.
 metadata:
   author: Gleb Lukicov
-  version: 1.0.1
+  version: 1.1.0
 ---
 
 # SlideOps: generate a deck from a repository, and keep it true
@@ -38,6 +38,13 @@ scheduled refreshes, and agent hooks.
 ## Which job is this?
 
 - The user wants a **new deck**: start at Step 0 below.
+- The user wants **Markdown documentation instead of slides** (a doc that lives in the
+  repo and renders on GitHub, with the same citations and the same freshness check):
+  follow [`references/markdown.md`](references/markdown.md). It reuses this file's
+  research, confidentiality, and refresh rules and swaps the build and verify steps;
+  [`references/markdown-pdf.md`](references/markdown-pdf.md) covers exporting such a doc
+  to PDF. Checking or refreshing an existing `.md` doc is the same `check.py` workflow
+  as decks; sweeps pick both up together.
 - The user is asking whether an existing deck is **still accurate**, wants one
   **refreshed**, or wants the check **automated**: go straight to
   [Refreshing an existing deck](#refreshing-an-existing-deck) near the end. Do not rebuild

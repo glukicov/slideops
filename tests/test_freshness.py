@@ -36,11 +36,17 @@ def unused():
 
 @dataclass
 class DeckRepo:
-    """A repository with one deck citing lines 5-7 of app.py, built at HEAD."""
+    """A repository with one document citing lines 5-7 of app.py, built at HEAD.
+
+    The document is either an HTML deck or a Markdown doc: the two citation carriers
+    share the whole freshness lifecycle, so every drift scenario runs against both.
+    """
 
     root: Path
     deck: Path
     citation: str
+    kind: str = "html"
+    expected_location: str = "5"
 
     def git(self, *args: str) -> str:
         result = subprocess.run(["git", "-C", str(self.root), *args], check=True, capture_output=True, text=True)
@@ -71,8 +77,9 @@ class DeckRepo:
         return found[0]
 
     def set_citation(self, attributes: str) -> None:
-        self.deck.write_text(self.deck.read_text().replace(self.citation, attributes))
-        self.citation = attributes
+        carrier = f"<!-- slideops {attributes} -->" if self.kind == "md" else attributes
+        self.deck.write_text(self.deck.read_text().replace(self.citation, carrier))
+        self.citation = carrier
 
     def restamp(self) -> None:
         subprocess.run(
@@ -82,8 +89,9 @@ class DeckRepo:
         )
 
 
-@pytest.fixture
-def deck_repo(tmp_path: Path) -> DeckRepo:
+@pytest.fixture(params=["html", "md"])
+def deck_repo(request: pytest.FixtureRequest, tmp_path: Path) -> DeckRepo:
+    kind: str = request.param
     root = tmp_path / "repo"
     root.mkdir()
     (root / "app.py").write_text(SOURCE)
@@ -96,19 +104,27 @@ def deck_repo(tmp_path: Path) -> DeckRepo:
     ):
         subprocess.run(["git", "-C", str(root), *args], check=True, capture_output=True)
 
+    cite_args = ["app.py:5-7", "--repo", str(root)] + (["--md"] if kind == "md" else [])
     cited = subprocess.run(
-        [sys.executable, str(CITE), "app.py:5-7", "--repo", str(root)],
+        [sys.executable, str(CITE), *cite_args],
         check=True,
         capture_output=True,
         text=True,
     ).stdout.strip()
 
-    deck = root / "docs" / "slides" / "deck.html"
-    deck.parent.mkdir(parents=True)
-    deck.write_text(
-        f"<html><head>\n</head><body>\n<!-- 4: RATE-LIMIT -->\n<pre {cited}>snippet</pre>\n</body></html>\n"
-    )
-    repo = DeckRepo(root=root, deck=deck, citation=cited)
+    if kind == "md":
+        deck = root / "docs" / "slides" / "doc.md"
+        deck.parent.mkdir(parents=True)
+        deck.write_text(f"# Guide\n\n## RATE-LIMIT\n\n{cited}\n```python\nsnippet\n```\n")
+        # Headings are the anchors: "# Guide" is 0, "## RATE-LIMIT" is 1, displayed as 2.
+        repo = DeckRepo(root=root, deck=deck, citation=cited, kind="md", expected_location="2")
+    else:
+        deck = root / "docs" / "slides" / "deck.html"
+        deck.parent.mkdir(parents=True)
+        deck.write_text(
+            f"<html><head>\n</head><body>\n<!-- 4: RATE-LIMIT -->\n<pre {cited}>snippet</pre>\n</body></html>\n"
+        )
+        repo = DeckRepo(root=root, deck=deck, citation=cited)
     repo.restamp()
     return repo
 
@@ -121,11 +137,12 @@ def test_a_freshly_built_deck_is_current(deck_repo: DeckRepo) -> None:
 
 def test_slide_attribution_survives_a_hyphenated_label(deck_repo: DeckRepo) -> None:
     citation = deck_repo.only()
-    assert citation["slide"] == "5"
+    assert citation["slide"] == deck_repo.expected_location
     assert citation["label"] == "RATE-LIMIT"
 
 
 def test_a_directory_sweep_finds_the_deck(deck_repo: DeckRepo) -> None:
+    (deck_repo.deck.parent / "README.md").write_text("# Companion readme\n\nNo citations, must be skipped.\n")
     result = subprocess.run(
         [sys.executable, str(CHECK), "docs/slides", "--repo", str(deck_repo.root), "--json"],
         cwd=deck_repo.root,
@@ -135,6 +152,7 @@ def test_a_directory_sweep_finds_the_deck(deck_repo: DeckRepo) -> None:
     payload = json.loads(result.stdout)
     assert payload["checked"] == 1
     assert payload["stale"] == 0
+    assert payload["decks"][0]["kind"] == ("doc" if deck_repo.kind == "md" else "deck")
 
 
 def test_shifted_lines_report_moved_with_the_new_range(deck_repo: DeckRepo) -> None:
@@ -184,12 +202,13 @@ def test_a_snippet_without_a_hash_is_unverified(deck_repo: DeckRepo) -> None:
     assert deck_repo.run_check().returncode == 0
 
 
-def test_the_example_deck_still_matches_this_repository() -> None:
-    """The demo deck is built by the skill, so its own citations are a live regression test."""
+@pytest.mark.parametrize("example", ["skill-demo.html", "skill-demo.md"])
+def test_the_examples_still_match_this_repository(example: str) -> None:
+    """The demo deck and doc are built by the skill, so their citations are a live regression test."""
     root = Path(__file__).resolve().parent.parent
-    deck = root / "skills" / "slideops" / "examples" / "skill-demo.html"
+    target = root / "skills" / "slideops" / "examples" / example
     result = subprocess.run(
-        [sys.executable, str(CHECK), str(deck), "--repo", str(root)],
+        [sys.executable, str(CHECK), str(target), "--repo", str(root)],
         capture_output=True,
         text=True,
     )

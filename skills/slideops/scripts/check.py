@@ -46,8 +46,15 @@ CITATION_RE = re.compile(
     r'(?:[^<>]*?data-sha256="(?P<sha>[0-9a-f]{6,64})")?[^<>]*>',
     re.I | re.S,
 )
+MD_CITATION_RE = re.compile(
+    r'<!--\s*slideops\s+data-src="(?P<src>[^"]+)"(?:\s+data-sha256="(?P<sha>[0-9a-f]{6,64})")?\s*-->',
+    re.I,
+)
 BUILD_META_RE = re.compile(r'<meta name="slideops-build" content="(?P<content>[^"]*)"', re.I)
+MD_BUILD_META_RE = re.compile(r"<!--\s*slideops-build\s+(?P<content>[^>]*?)\s*-->", re.I)
 SLIDE_COMMENT_RE = re.compile(r"<!--\s*(?P<index>\d+):\s*(?P<label>.+?)\s*-->")
+MD_HEADING_RE = re.compile(r"^#{1,6}\s+(?P<text>.+?)\s*$", re.M)
+MD_SUFFIXES = {".md", ".markdown"}
 HASH_LENGTH = 12
 MAX_COMMITS = 10
 
@@ -88,9 +95,15 @@ class DeckReport:
     """One deck's worth of results, so a run can span a whole docs/slides/ folder."""
 
     deck: Path
+    kind: str = "deck"
     build: dict[str, str] = field(default_factory=dict)
     citations: list[Citation] = field(default_factory=list)
     error: str = ""
+
+    @property
+    def noun(self) -> str:
+        """What a citation's location is called in this document: a slide or a section."""
+        return "section" if self.kind == "doc" else "slide"
 
     @property
     def stale(self) -> list[Citation]:
@@ -130,33 +143,80 @@ def git(repo: Path, *args: str) -> str | None:
     return result.stdout if result.returncode == 0 else None
 
 
+def is_markdown(path: Path) -> bool:
+    return path.suffix.lower() in MD_SUFFIXES
+
+
+def mask_fences(text: str) -> str:
+    """Blank fenced code blocks (delimiters included), keeping every offset and newline.
+
+    A doc that *teaches* the citation syntax quotes it inside a fence; masking first is
+    what keeps those examples from being counted as citations, headings, or build stamps.
+    """
+
+    def blank(line: str) -> str:
+        body, newline = (line[:-1], "\n") if line.endswith("\n") else (line, "")
+        return " " * len(body) + newline
+
+    out: list[str] = []
+    fence = ""
+    for line in text.splitlines(keepends=True):
+        stripped = line.lstrip()
+        marker = ""
+        if stripped[:3] in ("```", "~~~"):
+            marker = stripped[0] * (len(stripped) - len(stripped.lstrip(stripped[0])))
+        if fence:
+            if marker and marker[0] == fence[0] and len(marker) >= len(fence):
+                fence = ""
+            out.append(blank(line))
+        elif marker:
+            fence = marker
+            out.append(blank(line))
+        else:
+            out.append(line)
+    return "".join(out)
+
+
+def _attach(anchors: list[tuple[int, int, str]], position: int) -> tuple[int | None, str]:
+    """The nearest preceding anchor (slide comment or heading) owns the citation."""
+    index, label = None, ""
+    for anchor_position, anchor_index, anchor_label in anchors:
+        if anchor_position <= position:
+            index, label = anchor_index, anchor_label
+        else:
+            break
+    return index, label
+
+
+def _citation(match: re.Match[str], anchors: list[tuple[int, int, str]]) -> Citation:
+    index, label = _attach(anchors, match.start())
+    path, start, end = parse_src(match.group("src"))
+    return Citation(
+        src=match.group("src"),
+        path=path,
+        start=start,
+        end=end,
+        recorded_sha=(match.group("sha") or "").lower() or None,
+        slide_index=index,
+        slide_label=label,
+    )
+
+
 def find_citations(deck_html: str) -> list[Citation]:
     """Attach each citation to the slide it sits on, using the slide-index comments."""
     slides: list[tuple[int, int, str]] = [
         (m.start(), int(m.group("index")), m.group("label").strip()) for m in SLIDE_COMMENT_RE.finditer(deck_html)
     ]
+    return [_citation(match, slides) for match in CITATION_RE.finditer(deck_html)]
 
-    citations: list[Citation] = []
-    for match in CITATION_RE.finditer(deck_html):
-        index, label = None, ""
-        for position, slide_index, slide_label in slides:
-            if position <= match.start():
-                index, label = slide_index, slide_label
-            else:
-                break
-        path, start, end = parse_src(match.group("src"))
-        citations.append(
-            Citation(
-                src=match.group("src"),
-                path=path,
-                start=start,
-                end=end,
-                recorded_sha=(match.group("sha") or "").lower() or None,
-                slide_index=index,
-                slide_label=label,
-            )
-        )
-    return citations
+
+def find_citations_md(doc_text: str) -> list[Citation]:
+    """Attach each citation comment to the nearest preceding Markdown heading."""
+    masked = mask_fences(doc_text)
+    headings: list[tuple[int, int, str]] = [
+        (m.start(), index, m.group("text").strip()) for index, m in enumerate(MD_HEADING_RE.finditer(masked))
+    ]
+    return [_citation(match, headings) for match in MD_CITATION_RE.finditer(masked)]
 
 
 def locate_moved(current_text: str, original: list[str]) -> tuple[int, int] | None:
@@ -243,9 +303,9 @@ def check_citation(citation: Citation, repo: Path, build_commit: str | None) -> 
         citation.detail = "content differs (build commit unavailable, cannot diff)"
 
 
-def parse_build_meta(deck_html: str) -> dict[str, str]:
+def parse_build_meta(deck_html: str, *, markdown: bool = False) -> dict[str, str]:
     build: dict[str, str] = {}
-    meta = BUILD_META_RE.search(deck_html)
+    meta = MD_BUILD_META_RE.search(mask_fences(deck_html)) if markdown else BUILD_META_RE.search(deck_html)
     if meta:
         for part in meta.group("content").split():
             key, _, value = part.partition("=")
@@ -255,19 +315,20 @@ def parse_build_meta(deck_html: str) -> dict[str, str]:
 
 
 def check_deck(deck: Path, repo: Path) -> DeckReport:
-    report = DeckReport(deck=deck)
+    markdown = is_markdown(deck)
+    report = DeckReport(deck=deck, kind="doc" if markdown else "deck")
     try:
         deck_html = deck.read_text(errors="replace")
     except OSError as exc:
         report.error = f"could not read: {exc}"
         return report
 
-    report.build = parse_build_meta(deck_html)
+    report.build = parse_build_meta(deck_html, markdown=markdown)
     build_commit = report.build.get("commit")
     if build_commit and git(repo, "cat-file", "-e", f"{build_commit}^{{commit}}") is None:
         build_commit = None
 
-    report.citations = find_citations(deck_html)
+    report.citations = find_citations_md(deck_html) if markdown else find_citations(deck_html)
     for citation in report.citations:
         check_citation(citation, repo, build_commit)
     return report
@@ -279,6 +340,9 @@ def looks_like_deck(path: Path) -> bool:
         head = path.read_text(errors="replace")
     except OSError:
         return False
+    if is_markdown(path):
+        masked = mask_fences(head)
+        return bool(MD_BUILD_META_RE.search(masked) or MD_CITATION_RE.search(masked))
     return bool(BUILD_META_RE.search(head) or CITATION_RE.search(head))
 
 
@@ -288,7 +352,8 @@ def collect_decks(targets: list[Path]) -> tuple[list[Path], list[str]]:
     problems: list[str] = []
     for target in targets:
         if target.is_dir():
-            found = [p for p in sorted(target.rglob("*.html")) if looks_like_deck(p)]
+            candidates = sorted([*target.rglob("*.html"), *target.rglob("*.md"), *target.rglob("*.markdown")])
+            found = [p for p in candidates if looks_like_deck(p)]
             if not found:
                 problems.append(f"{target}: no decks with citations found")
             decks.extend(found)
@@ -336,7 +401,7 @@ def print_deck(report: DeckReport, repo: Path, quiet: bool, multi: bool) -> None
     width = max(len(c.src) for c in shown)
     for citation in shown:
         line = (
-            f"  slide {citation.display_slide:>3}  {citation.slide_label:<14} "
+            f"  {report.noun} {citation.display_slide:>3}  {citation.slide_label:<14} "
             f"{citation.src:<{width}}  {citation.status:<10} {citation.detail}"
         )
         print(line.rstrip())
@@ -349,7 +414,7 @@ def print_suggestions(report: DeckReport, multi: bool) -> None:
         print()
         print("=" * 78)
         where = f"{report.deck}: " if multi else ""
-        headline = f"slide {citation.display_slide} ({citation.slide_label})"
+        headline = f"{report.noun} {citation.display_slide} ({citation.slide_label})"
         print(f"{where}{headline} — {citation.src} — {citation.status}")
         print("=" * 78)
         if citation.commits:
@@ -427,6 +492,7 @@ def emit_json(reports: list[DeckReport], repo: Path) -> None:
                 "decks": [
                     {
                         "deck": str(r.deck),
+                        "kind": r.kind,
                         "build": r.build,
                         "error": r.error or None,
                         "stale": len(r.stale),

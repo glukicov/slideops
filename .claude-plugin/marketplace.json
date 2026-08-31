@@ -11,7 +11,7 @@
     {
       "name": "slideops",
       "source": "./",
-      "description": "Turn a repository into a slide deck, then find out the day it stops matching the code. Includes slides-to-pdf for verified PDF export.",
+      "description": "Turn a repository into a slide deck or Markdown docs, then find out the day they stop matching the code. Includes slides-to-pdf for verified PDF export.",
       "category": "documentation",
       "keywords": [
         "slides",
