@@ -1,0 +1,58 @@
+name: Release assets
+
+# The README links to releases/latest/download/skill-demo.pdf. That URL only resolves
+# while whichever release GitHub calls "latest" carries an asset under exactly that
+# filename - check we do have it.
+on:
+  release:
+    types: [published, edited, released, deleted]
+  workflow_dispatch:
+  schedule:
+    # Mondays. Catches a release deleted or edited by hand outside the release event.
+    - cron: "17 9 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  demo-pdf-attached:
+    name: The README download link resolves
+    runs-on: ubuntu-latest
+    steps:
+      - name: The latest release carries skill-demo.pdf
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # `gh release create` uploads assets after the release row exists, so the
+          # published event can arrive a few seconds ahead of the file. Poll, do not
+          # fail on the first look.
+          for attempt in $(seq 1 12); do
+            tag=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)
+            if gh release view --repo "$GITHUB_REPOSITORY" --json assets \
+                 --jq '.assets[].name' | grep -qx 'skill-demo.pdf'; then
+              echo "$tag carries skill-demo.pdf (attempt $attempt)"
+              exit 0
+            fi
+            echo "attempt $attempt: latest release $tag has no skill-demo.pdf yet, waiting"
+            sleep 10
+          done
+          echo "::error title=Missing release asset::The latest release has no skill-demo.pdf, so the README link is 404ing. Attach dist/skill-demo.pdf to it: gh release upload $tag dist/skill-demo.pdf"
+          exit 1
+
+      - name: The URL in the README actually serves a PDF
+        run: |
+          set -euo pipefail
+          url="https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/skill-demo.pdf"
+          code=$(curl -sIL -o /dev/null -w '%{http_code}' "$url")
+          if [ "$code" != "200" ]; then
+            echo "::error title=README link broken::$url returned $code"
+            exit 1
+          fi
+          # A 200 is not enough on its own: an error page would also be a 200.
+          magic=$(curl -sL "$url" | head -c 5)
+          if [ "$magic" != "%PDF-" ]; then
+            echo "::error title=Not a PDF::$url returned 200 but the body does not start with %PDF-"
+            exit 1
+          fi
+          echo "$url serves a PDF"
