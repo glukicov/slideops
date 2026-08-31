@@ -54,7 +54,10 @@ import sys
 stage = Path(sys.argv[1])
 body = (stage / "body.html").read_text()
 (stage / "print.html").write_text(f"""<!doctype html><meta charset="utf-8"><style>
-  @page {{ size: A4; margin: 18mm 16mm; }}
+  @page {{ size: A4; margin: 18mm 16mm 20mm;
+    @bottom-center {{ content: counter(page) " / " counter(pages);
+                     font: 9pt/1 -apple-system, "Segoe UI", Roboto, sans-serif;
+                     color: #666; }} }}
   body {{ font: 11pt/1.55 -apple-system, "Segoe UI", Roboto, sans-serif;
           max-width: 100%; margin: 0; }}
   h1, h2, h3 {{ line-height: 1.25; page-break-after: avoid; }}
@@ -73,6 +76,16 @@ EOF
   "file://$STAGE/print.html"
 ```
 
+The `@bottom-center` block is what numbers the pages: a CSS paged-media margin box, so
+Chrome paints `1 / 7` centred in the bottom margin of every page and keeps counting
+correctly however the content happens to break. The wider `20mm` bottom margin is the
+room it prints into. Keep `--no-pdf-header-footer`: Chrome's own footer is a right-hand
+`file://` URL and a date, which is not what was asked for and would sit beside this one.
+
+Margin boxes are a recent Chrome feature. An older binary drops the rule silently and
+prints unnumbered pages that otherwise look correct, which is why step 4 reads the
+numbers back rather than assuming them.
+
 ## 4. Verify by rendering the PDF back to images
 
 Identical to the slides-to-pdf verification, and just as mandatory: render every page
@@ -80,6 +93,11 @@ back to an image with pypdfium2 (throwaway venv if it is not installed), then ac
 view the first page, the last page, and every page that should contain an image or a
 diagram. The classic silent failure is a broken image path producing a right-looking
 page count with a blank page in the middle.
+
+The same pass reads the footer back. `page.get_textpage().get_text_range()` returns the
+margin box text along with the body, so assert that every page contains its own
+`"{i} / {n}"` before shipping; a Chrome too old for margin boxes fails here and nowhere
+else.
 
 ```bash
 python3 -m venv "$STAGE/venv" && "$STAGE/venv/bin/pip" install --quiet pypdfium2 Pillow
@@ -89,9 +107,13 @@ import pypdfium2 as pdfium
 
 stage = sys.argv[1]
 pdf = pdfium.PdfDocument(f"{stage}/output.pdf")
-print("page count:", len(pdf))
-for i in range(len(pdf)):
+n = len(pdf)
+print("page count:", n)
+for i in range(n):
     pdf[i].render(scale=1.5).to_pil().save(f"{stage}/check-{i + 1:02d}.png")
+    footer = f"{i + 1} / {n}"
+    assert footer in pdf[i].get_textpage().get_text_range(), f"page {i + 1} has no footer"
+print("every page is numbered")
 EOF
 ```
 

@@ -12,9 +12,12 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import typer
+
+if TYPE_CHECKING:
+    import pypdfium2 as pdfium
 
 WIDTH, HEIGHT = 1280, 720
 MIN_PNG_BYTES = 5_000
@@ -55,7 +58,10 @@ def run_chrome(chrome: Path, *args: str) -> None:
 
 
 PRINT_CSS = """<!doctype html><meta charset="utf-8"><style>
-  @page { size: A4; margin: 18mm 16mm; }
+  @page { size: A4; margin: 18mm 16mm 20mm;
+    @bottom-center { content: counter(page) " / " counter(pages);
+                     font: 9pt/1 -apple-system, "Segoe UI", Roboto, sans-serif;
+                     color: #666; } }
   body { font: 11pt/1.55 -apple-system, "Segoe UI", Roboto, sans-serif; margin: 0; }
   h1, h2, h3 { line-height: 1.25; page-break-after: avoid; }
   pre { font: 8.5pt/1.45 ui-monospace, "SF Mono", Consolas, monospace;
@@ -66,6 +72,20 @@ PRINT_CSS = """<!doctype html><meta charset="utf-8"><style>
   td, th { border: 0.5pt solid #999; padding: 3pt 8pt; }
 </style>
 """
+
+
+def check_page_numbers(pdf: pdfium.PdfDocument, label: str) -> None:
+    """Every page must carry its own centred "i / n" footer.
+
+    Both footers are real text (an overlaid div for slides, a CSS margin box for docs), so
+    extraction proves them. A Chrome without paged-media margin box support drops the doc
+    footer silently and produces a PDF that is correct in every other respect.
+    """
+    total = len(pdf)
+    for index in range(total):
+        if f"{index + 1} / {total}" not in pdf[index].get_textpage().get_text_range():
+            sys.exit(f"{label} page {index + 1} of {total} has no page-number footer")
+    print(f"{label}: all {total} pages numbered")
 
 
 def export_doc_pdf(chrome: Path, doc: Path, stage: Path) -> Path:
@@ -151,14 +171,24 @@ def main(
             sys.exit(f"Slide {index} rendered blank ({shot.stat().st_size} bytes)")
     print(f"Rendered {slide_count} non-blank slides")
 
-    pages = "\n".join(f'<div class="page"><img src="slide-{i:02d}.png"></div>' for i in range(1, slide_count + 1))
+    pages = "\n".join(
+        f'<div class="page"><img src="slide-{i:02d}.png"><div class="folio">'
+        f"<span>{i} / {slide_count}</span></div></div>"
+        for i in range(1, slide_count + 1)
+    )
     (stage / "print.html").write_text(
         f"""<style>
   @page {{ size: {WIDTH}px {HEIGHT}px; margin: 0; }}
   * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-  .page {{ width: {WIDTH}px; height: {HEIGHT}px; overflow: hidden; page-break-after: always; }}
+  .page {{ width: {WIDTH}px; height: {HEIGHT}px; overflow: hidden; page-break-after: always;
+           position: relative; }}
   .page:last-child {{ page-break-after: auto; }}
   .page img {{ width: {WIDTH}px; height: {HEIGHT}px; display: block; }}
+  .folio {{ position: absolute; left: 0; right: 0; bottom: 18px; text-align: center;
+            font: 13px/1 -apple-system, "Segoe UI", Roboto, sans-serif;
+            font-variant-numeric: tabular-nums; }}
+  .folio span {{ background: rgba(0, 0, 0, 0.38); color: #fff;
+                 padding: 6px 13px; border-radius: 999px; }}
 </style>
 {pages}"""
     )
@@ -188,6 +218,7 @@ def main(
         if colours is not None and len(colours) <= 1:
             sys.exit(f"PDF page {page_index + 1} rendered blank")
     print(f"PDF verified: {len(pdf)} pages, sampled pages have real content")
+    check_page_numbers(pdf, "Deck PDF")
 
     if pdf_out is not None:
         pdf.close()
@@ -211,6 +242,7 @@ def main(
     if first_page_colours is not None and len(first_page_colours) < 50:
         sys.exit("Doc PDF page 1 has too few colours; the embedded image likely failed to load")
     print(f"Doc PDF verified: {len(doc_pdf)} pages, image page has real pixels")
+    check_page_numbers(doc_pdf, "Doc PDF")
 
     print("OK: render and export smoke test passed")
 

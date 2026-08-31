@@ -5,16 +5,17 @@ license: MIT
 compatibility: Needs a headless Chrome or Chromium binary (Playwright cache or system install), Python 3, and pypdfium2 for PDF verification (already installed, or one pinned pip download into a throwaway venv). Works offline otherwise. macOS and Linux; Windows untested.
 metadata:
   author: Gleb Lukicov
-  version: 1.0.0
+  version: 1.0.1
 ---
 
 # Slides to PDF
 
 Converts a JS-driven, one-slide-per-screen HTML deck into a paginated PDF: one page per
-slide, pixel-identical to the browser rendering. There is no native "print to PDF" for
-such decks (printing captures only the visible slide), so the pipeline is: screenshot
-every slide at 2x with headless Chrome, wrap the screenshots in a print-paginated page,
-print that to PDF, then verify the PDF by rendering it back to images.
+slide, matching the browser rendering, with a centred page number in the footer. There is
+no native "print to PDF" for such decks (printing captures only the visible slide), so the
+pipeline is: screenshot every slide at 2x with headless Chrome, wrap the screenshots in a
+print-paginated page, number them, print that to PDF, then verify the PDF by rendering it
+back to images.
 
 Inputs to establish up front (ask only if not obvious):
 
@@ -116,17 +117,37 @@ from pathlib import Path
 
 stage, n, w, h = Path(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4])
 pages = "\n".join(
-    f'<div class="page"><img src="slide-{i:02d}.png"></div>' for i in range(1, n + 1))
+    f'<div class="page"><img src="slide-{i:02d}.png"><div class="folio">'
+    f'<span>{i} / {n}</span></div></div>' for i in range(1, n + 1))
 (stage / "print.html").write_text(f'''<style>
   @page {{ size: {w}px {h}px; margin: 0; }}
   * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-  .page {{ width: {w}px; height: {h}px; overflow: hidden; page-break-after: always; }}
+  .page {{ width: {w}px; height: {h}px; overflow: hidden; page-break-after: always;
+           position: relative; }}
   .page:last-child {{ page-break-after: auto; }}
   .page img {{ width: {w}px; height: {h}px; display: block; }}
+  .folio {{ position: absolute; left: 0; right: 0; bottom: 18px; text-align: center;
+            font: 13px/1 -apple-system, "Segoe UI", Roboto, sans-serif;
+            font-variant-numeric: tabular-nums; }}
+  .folio span {{ background: rgba(0, 0, 0, 0.38); color: #fff;
+                 padding: 6px 13px; border-radius: 999px; }}
 </style>
 {pages}''')
 EOF
+```
 
+The `.folio` div is the page number. It has to be drawn here rather than left to CSS
+paged-media margin boxes, because the pages are full-bleed screenshots with a zero `@page`
+margin: there is no margin box to print into. Numbering the wrapper also means the count
+is exact by construction instead of inferred from how Chrome paginated.
+
+It sits at `bottom: 18px`, where the deck's own HUD counter was before step 2 hid it, so
+it lands on space the slide already keeps clear. The translucent pill is what keeps it
+legible on a light and a dark deck alike; white text alone disappears on one of them.
+Keep `--no-pdf-header-footer` below, or Chrome adds a second, right-aligned number of its
+own.
+
+```bash
 "$CHROME" --headless=new --disable-gpu "${CHROME_SANDBOX_ARGS[@]}" \
   --print-to-pdf="$STAGE/output.pdf" --no-pdf-header-footer \
   "file://$STAGE/print.html"
@@ -146,9 +167,13 @@ import sys
 import pypdfium2 as pdfium
 stage = sys.argv[1]
 pdf = pdfium.PdfDocument(f"{stage}/output.pdf")
-print("page count:", len(pdf))          # must equal the slide count
-for i in range(len(pdf)):
+n = len(pdf)
+print("page count:", n)                 # must equal the slide count
+for i in range(n):
     pdf[i].render(scale=1.5).to_pil().save(f"{stage}/check-{i+1:02d}.png")
+    footer = f"{i+1} / {n}"             # the folio is real text, so it extracts
+    assert footer in pdf[i].get_textpage().get_text_range(), f"page {i+1} has no footer"
+print("every page is numbered")
 EOF
 ```
 
