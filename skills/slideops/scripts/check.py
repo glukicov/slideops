@@ -340,6 +340,9 @@ def looks_like_deck(path: Path) -> bool:
         head = path.read_text(errors="replace")
     except OSError:
         return False
+    if is_markdown(path):
+        masked = mask_fences(head)
+        return bool(MD_BUILD_META_RE.search(masked) or MD_CITATION_RE.search(masked))
     return bool(BUILD_META_RE.search(head) or CITATION_RE.search(head))
 
 
@@ -349,7 +352,8 @@ def collect_decks(targets: list[Path]) -> tuple[list[Path], list[str]]:
     problems: list[str] = []
     for target in targets:
         if target.is_dir():
-            found = [p for p in sorted(target.rglob("*.html")) if looks_like_deck(p)]
+            candidates = sorted([*target.rglob("*.html"), *target.rglob("*.md"), *target.rglob("*.markdown")])
+            found = [p for p in candidates if looks_like_deck(p)]
             if not found:
                 problems.append(f"{target}: no decks with citations found")
             decks.extend(found)
@@ -397,7 +401,7 @@ def print_deck(report: DeckReport, repo: Path, quiet: bool, multi: bool) -> None
     width = max(len(c.src) for c in shown)
     for citation in shown:
         line = (
-            f"  slide {citation.display_slide:>3}  {citation.slide_label:<14} "
+            f"  {report.noun} {citation.display_slide:>3}  {citation.slide_label:<14} "
             f"{citation.src:<{width}}  {citation.status:<10} {citation.detail}"
         )
         print(line.rstrip())
@@ -410,7 +414,7 @@ def print_suggestions(report: DeckReport, multi: bool) -> None:
         print()
         print("=" * 78)
         where = f"{report.deck}: " if multi else ""
-        headline = f"slide {citation.display_slide} ({citation.slide_label})"
+        headline = f"{report.noun} {citation.display_slide} ({citation.slide_label})"
         print(f"{where}{headline} — {citation.src} — {citation.status}")
         print("=" * 78)
         if citation.commits:
@@ -488,6 +492,7 @@ def emit_json(reports: list[DeckReport], repo: Path) -> None:
                 "decks": [
                     {
                         "deck": str(r.deck),
+                        "kind": r.kind,
                         "build": r.build,
                         "error": r.error or None,
                         "stale": len(r.stale),

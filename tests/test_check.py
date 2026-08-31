@@ -7,7 +7,10 @@ behaviour against a real git repository lives in test_freshness.py.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
+
+import pytest
 
 import check
 
@@ -284,3 +287,45 @@ class TestCollectDecks:
     def test_empty_directory_is_reported(self, tmp_path: Path) -> None:
         _, problems = check.collect_decks([tmp_path])
         assert "no decks with citations" in problems[0]
+
+    def test_directory_finds_markdown_docs_with_citations(self, tmp_path: Path) -> None:
+        citation = '<!-- slideops data-src="a.py:1" data-sha256="abc123" -->\n```python\nx\n```\n'
+        (tmp_path / "doc.md").write_text(citation)
+        (tmp_path / "README.md").write_text("# Just a readme\n\nNo citations here.\n")
+        decks, problems = check.collect_decks([tmp_path])
+        assert [d.name for d in decks] == ["doc.md"]
+        assert problems == []
+
+    def test_markdown_that_only_quotes_the_syntax_is_skipped(self, tmp_path: Path) -> None:
+        (tmp_path / "reference.md").write_text(
+            '# How to cite\n\n```markdown\n<!-- slideops data-src="a.py:1" data-sha256="abc123" -->\n```\n'
+        )
+        decks, problems = check.collect_decks([tmp_path])
+        assert decks == []
+        assert "no decks with citations" in problems[0]
+
+    def test_a_stamped_doc_without_citations_is_still_swept(self, tmp_path: Path) -> None:
+        (tmp_path / "doc.md").write_text("<!-- slideops-build commit=abc1234 date=2026-08-31 repo=demo -->\n# T\n")
+        decks, _ = check.collect_decks([tmp_path])
+        assert [d.name for d in decks] == ["doc.md"]
+
+
+class TestDocReport:
+    def test_a_markdown_doc_reports_sections_not_slides(self, tmp_path: Path, capsys: object) -> None:
+        doc = tmp_path / "doc.md"
+        doc.write_text(DOC)
+        report = check.check_deck(doc, tmp_path)
+        assert report.kind == "doc"
+        assert report.noun == "section"
+
+    def test_an_html_deck_still_reports_slides(self, tmp_path: Path) -> None:
+        deck = tmp_path / "deck.html"
+        deck.write_text('<pre data-src="a.py:1" data-sha256="abc123">x</pre>')
+        assert check.check_deck(deck, tmp_path).noun == "slide"
+
+    def test_json_payload_carries_the_kind(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        doc = tmp_path / "doc.md"
+        doc.write_text(DOC)
+        check.emit_json([check.check_deck(doc, tmp_path)], tmp_path)
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["decks"][0]["kind"] == "doc"

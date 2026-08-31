@@ -129,9 +129,9 @@ def find_citations_md(doc_text: str) -> list[Citation]:
 
 ```python
 def test_md_flag_prints_a_ready_to_paste_comment(tmp_repo, capsys): ...  # startswith "<!-- slideops data-src="
-def test_md_snippet_is_fenced_with_the_language(tmp_repo, capsys): ...   # "```python" fence, raw '<' unescaped
+def test_md_snippet_is_fenced_with_the_language(tmp_repo, capsys): ...  # "```python" fence, raw '<' unescaped
 def test_fence_grows_past_backtick_runs_in_the_source(tmp_repo, capsys): ...  # source holds ```; fence is ````
-def test_md_suppresses_width_warnings(tmp_repo, capsys): ...             # 100-char line, empty stderr
+def test_md_suppresses_width_warnings(tmp_repo, capsys): ...  # 100-char line, empty stderr
 ```
 
 - [ ] **Step 2:** run → FAIL.
