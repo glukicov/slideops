@@ -202,12 +202,13 @@ def test_a_snippet_without_a_hash_is_unverified(deck_repo: DeckRepo) -> None:
     assert deck_repo.run_check().returncode == 0
 
 
-def test_the_example_deck_still_matches_this_repository() -> None:
-    """The demo deck is built by the skill, so its own citations are a live regression test."""
+@pytest.mark.parametrize("example", ["skill-demo.html", "skill-demo.md"])
+def test_the_examples_still_match_this_repository(example: str) -> None:
+    """The demo deck and doc are built by the skill, so their citations are a live regression test."""
     root = Path(__file__).resolve().parent.parent
-    deck = root / "skills" / "slideops" / "examples" / "skill-demo.html"
+    target = root / "skills" / "slideops" / "examples" / example
     result = subprocess.run(
-        [sys.executable, str(CHECK), str(deck), "--repo", str(root)],
+        [sys.executable, str(CHECK), str(target), "--repo", str(root)],
         capture_output=True,
         text=True,
     )
