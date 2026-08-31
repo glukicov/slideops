@@ -2,11 +2,7 @@ name: Release assets
 
 # The README links to releases/latest/download/skill-demo.pdf. That URL only resolves
 # while whichever release GitHub calls "latest" carries an asset under exactly that
-# filename. On 2026-08-31 v1.1.0 shipped with no assets, became latest, and the README
-# link 404'd for the 54 minutes until v1.1.1 replaced it. Nobody reported it.
-#
-# The rule was already written down in the release notes for v1.0.0 and it still broke,
-# so this job is the version of that rule a release cannot walk past.
+# filename - check we do have it.
 on:
   release:
     types: [published, edited, released, deleted]
