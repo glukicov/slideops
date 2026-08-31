@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
+import yaml
 
 SKILLS_DIR = "skills"
 SKILL_NAMES = ("slideops", "slides-to-pdf")
@@ -39,19 +40,17 @@ def parse_frontmatter(skill_md: Path) -> dict[str, str]:
     if end == -1:
         fail(skill_md, "frontmatter is never closed")
         return {}
-    fields: dict[str, str] = {}
-    key = None
-    for line in text[4:end].split("\n"):
-        if not line.strip():
-            continue
-        if line.startswith(("  ", "\t")):
-            continue
-        if ":" not in line:
-            fail(skill_md, f"unparsable frontmatter line: {line!r}")
-            continue
-        key, _, value = line.partition(":")
-        fields[key.strip()] = value.strip()
-    return fields
+    # Claude Code's loader is lenient, but ecosystem tools (npx skills, strict YAML
+    # parsers) silently drop a skill whose frontmatter does not parse. Fail here instead.
+    try:
+        parsed = yaml.safe_load(text[4:end])
+    except yaml.YAMLError as exc:
+        fail(skill_md, f"frontmatter is not strict YAML (ecosystem tools will drop this skill): {exc}")
+        return {}
+    if not isinstance(parsed, dict):
+        fail(skill_md, "frontmatter is not a YAML mapping")
+        return {}
+    return {key: value if isinstance(value, str) else "" for key, value in parsed.items()}
 
 
 def check_skill(skill_dir: Path) -> None:
