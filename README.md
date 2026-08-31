@@ -8,6 +8,7 @@
 [![Python 3.14](https://img.shields.io/badge/python-3.14-blue)](pyproject.toml)
 [![Zero dependencies](https://img.shields.io/badge/dependencies-none-success)](.github/workflows/ci.yml)
 [![Agent Skill](https://img.shields.io/badge/Claude%20Code-Agent%20Skill-D97757)](https://agentskills.io/specification)
+[![skills.sh](https://skills.sh/b/glukicov/slideops)](https://skills.sh/glukicov/slideops)
 
 **[Install](#install) · [Use](#use) · [Features](#features) · [Docs](#documentation) · [Demo deck](https://github.com/glukicov/slideops/releases/latest/download/skill-demo.pdf) · [Why](https://medium.com/@lukicov/your-documentation-is-a-build-artifact-start-treating-it-like-one-ab48df61b1e0)**
 
@@ -41,6 +42,12 @@ it's the only install that keeps itself up to date:
 ```
 /plugin marketplace add glukicov/slideops
 /plugin install slideops@slideops
+```
+
+**Any agent with the [skills CLI](https://skills.sh)**, in one line:
+
+```bash
+npx skills add glukicov/slideops
 ```
 
 **Codex, Copilot CLI, OpenCode**, or a plain checkout:
