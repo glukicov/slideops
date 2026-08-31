@@ -1,11 +1,11 @@
 ---
 name: slideops
-description: Use when the user asks for slides, a slide deck, or a presentation about a code repository, one of its subsystems, a feature, an architecture area, or its recent changes. Triggers include "make slides", "build a slide deck", "create a presentation", "HTML slides for this repo", "overview deck", "team update slides", "slides for our latest changes", or naming a topic and asking for a deck about it. Also use when the user asks whether an existing deck still matches the code, or wants one rechecked, refreshed, or kept in sync automatically: "is this deck still accurate", "check the slides against the code", "did anything we documented change", "refresh the architecture deck", "these docs are stale", "fail the build when the deck stops matching the code", or asks to wire that check into CI, a pull request, or an agent hook.
+description: 'Use when the user asks for slides, a slide deck, or a presentation about a code repository, one of its subsystems, a feature, an architecture area, or its recent changes. Triggers include "make slides", "build a slide deck", "create a presentation", "HTML slides for this repo", "overview deck", "team update slides", "slides for our latest changes", or naming a topic and asking for a deck about it. Also use when the user asks whether an existing deck still matches the code, or wants one rechecked, refreshed, or kept in sync automatically: "is this deck still accurate", "check the slides against the code", "did anything we documented change", "refresh the architecture deck", "these docs are stale", "fail the build when the deck stops matching the code", or asks to wire that check into CI, a pull request, or an agent hook.'
 license: MIT
 compatibility: Needs a headless Chrome or Chromium binary (Playwright cache or system install) and Python 3 for the verification pass. Reads the target repository with git. Network access only if you opt into Mermaid diagrams (one npx download) or brand-colour extraction; everything else works offline.
 metadata:
   author: Gleb Lukicov
-  version: 1.0.0
+  version: 1.0.1
 ---
 
 # SlideOps: generate a deck from a repository, and keep it true
