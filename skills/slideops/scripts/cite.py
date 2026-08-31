@@ -5,8 +5,12 @@ The companion to check.py. `check` tells you what drifted; `cite` is what you us
 building or repairing a slide, so the two attributes that make a snippet checkable are
 never typed by hand:
 
-    python3 cite.py app/main.py:40-58 [more...] [--repo PATH] [--snippet]
+    python3 cite.py app/main.py:40-58 [more...] [--repo PATH] [--snippet] [--md]
     python3 cite.py --stamp docs/slides/deck.html [--repo PATH]
+
+With --md the citation prints as the comment form used in Markdown docs, --snippet prints
+a fenced block instead of escaped HTML, and --stamp on a .md file writes the comment stamp
+onto line 1.
 
 A hand-computed hash is worse than no hash: it reports UNVERIFIED or CHANGED months later
 and nobody can tell whether the code moved or the build was sloppy. Same for the build
@@ -28,8 +32,34 @@ from pathlib import Path
 
 HASH_LENGTH = 12
 BUILD_META_RE = re.compile(r'<meta name="slideops-build" content="[^"]*">', re.I)
+MD_BUILD_META_RE = re.compile(r"\A<!--\s*slideops-build[^>]*-->[ \t]*\n?", re.I)
 HEAD_RE = re.compile(r"<head[^>]*>", re.I)
 HALF_WIDTH, FULL_WIDTH = 65, 95
+MD_SUFFIXES = {".md", ".markdown"}
+FENCE_LANGS = {
+    ".py": "python",
+    ".js": "javascript",
+    ".ts": "typescript",
+    ".tsx": "tsx",
+    ".sh": "bash",
+    ".bash": "bash",
+    ".rb": "ruby",
+    ".go": "go",
+    ".rs": "rust",
+    ".java": "java",
+    ".c": "c",
+    ".h": "c",
+    ".cpp": "cpp",
+    ".yml": "yaml",
+    ".yaml": "yaml",
+    ".json": "json",
+    ".toml": "toml",
+    ".html": "html",
+    ".css": "css",
+    ".sql": "sql",
+    ".md": "markdown",
+    ".markdown": "markdown",
+}
 
 
 def git(repo: Path, *args: str) -> str | None:
@@ -47,7 +77,13 @@ def parse_ref(ref: str) -> tuple[str, int | None, int | None]:
     return match.group("path"), start, end
 
 
-def cite_one(ref: str, repo: Path, show_snippet: bool) -> bool:
+def fence_for(lines: list[str]) -> str:
+    """A backtick fence one longer than any backtick run in the content, minimum three."""
+    longest_run = max((len(m) for line in lines for m in re.findall(r"`+", line)), default=0)
+    return "`" * max(3, longest_run + 1)
+
+
+def cite_one(ref: str, repo: Path, show_snippet: bool, markdown: bool = False) -> bool:
     path, start, end = parse_ref(ref)
     file_path = repo / path
     if not file_path.is_file():
@@ -64,18 +100,31 @@ def cite_one(ref: str, repo: Path, show_snippet: bool) -> bool:
         selected, src = lines[start - 1 : end], f"{path}:{start}-{end}"
 
     digest = hashlib.sha256("\n".join(selected).encode("utf-8")).hexdigest()[:HASH_LENGTH]
-    print(f'data-src="{src}" data-sha256="{digest}"')
+    attributes = f'data-src="{src}" data-sha256="{digest}"'
+    print(f"<!-- slideops {attributes} -->" if markdown else attributes)
 
-    longest = max((len(line) for line in selected), default=0)
-    if longest > FULL_WIDTH:
-        print(f"  warning: longest line is {longest} chars; over the ~{FULL_WIDTH} full-width budget", file=sys.stderr)
-    elif longest > HALF_WIDTH:
-        print(f"  note: longest line is {longest} chars; needs a full-width pre (~{FULL_WIDTH})", file=sys.stderr)
+    if not markdown:
+        # The width budgets are slide-pattern constraints; fenced Markdown scrolls instead.
+        longest = max((len(line) for line in selected), default=0)
+        if longest > FULL_WIDTH:
+            print(
+                f"  warning: longest line is {longest} chars; over the ~{FULL_WIDTH} full-width budget",
+                file=sys.stderr,
+            )
+        elif longest > HALF_WIDTH:
+            print(f"  note: longest line is {longest} chars; needs a full-width pre (~{FULL_WIDTH})", file=sys.stderr)
 
     if show_snippet:
-        print()
-        for line in selected:
-            print(html.escape(line))
+        if markdown:
+            fence = fence_for(selected)
+            print(fence + FENCE_LANGS.get(file_path.suffix.lower(), ""))
+            for line in selected:
+                print(line)
+            print(fence)
+        else:
+            print()
+            for line in selected:
+                print(html.escape(line))
     return True
 
 
@@ -94,9 +143,22 @@ def stamp(deck: Path, repo: Path) -> int:
 
     name = (git(repo, "rev-parse", "--show-toplevel") or str(repo)).rsplit("/", 1)[-1]
     today = datetime.date.today().isoformat()
-    meta = f'<meta name="slideops-build" content="commit={commit} date={today} repo={name}">'
+    payload = f"commit={commit} date={today} repo={name}"
 
     text = deck.read_text()
+    if deck.suffix.lower() in MD_SUFFIXES:
+        # The stamp owns line 1 of a Markdown doc; a stamp-shaped example deeper in the
+        # file (say, inside a code fence) is content and must never be rewritten.
+        meta = f"<!-- slideops-build {payload} -->"
+        if MD_BUILD_META_RE.match(text):
+            text, action = MD_BUILD_META_RE.sub(meta + "\n", text, count=1), "updated"
+        else:
+            text, action = meta + "\n" + text, "inserted"
+        deck.write_text(text)
+        print(f"{action}: {meta}")
+        return 0
+
+    meta = f'<meta name="slideops-build" content="{payload}">'
     if BUILD_META_RE.search(text):
         text = BUILD_META_RE.sub(meta, text, count=1)
         action = "updated"
@@ -118,6 +180,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument("refs", nargs="*", help="path:start-end references to cite")
     parser.add_argument("--repo", type=Path, default=Path(), help="repository the deck cites (default: cwd)")
     parser.add_argument("--snippet", action="store_true", help="also print the HTML-escaped source, ready to paste")
+    parser.add_argument("--md", action="store_true", help="print Markdown citation comments (and fenced snippets)")
     parser.add_argument("--stamp", type=Path, metavar="DECK", help="write the build commit meta into this deck")
     args = parser.parse_args(argv[1:])
 
@@ -136,7 +199,7 @@ def main(argv: list[str]) -> int:
         print("Give at least one path:start-end reference, or --stamp DECK.", file=sys.stderr)
         return 2
 
-    return 0 if all([cite_one(ref, repo, args.snippet) for ref in args.refs]) else 1
+    return 0 if all([cite_one(ref, repo, args.snippet, markdown=args.md) for ref in args.refs]) else 1
 
 
 if __name__ == "__main__":

@@ -74,6 +74,72 @@ class TestCiteOne:
         assert "full-width budget" in capsys.readouterr().err
 
 
+class TestCiteMarkdown:
+    def test_md_flag_prints_a_ready_to_paste_comment(self, repo: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        assert cite.cite_one("app.py:5-6", repo, show_snippet=False, markdown=True) is True
+        printed = capsys.readouterr().out.strip()
+        expected = check.hash_lines(SOURCE.splitlines()[4:6])
+        assert printed == f'<!-- slideops data-src="app.py:5-6" data-sha256="{expected}" -->'
+
+    def test_md_snippet_is_fenced_with_the_language_and_not_escaped(
+        self, repo: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        (repo / "generic.py").write_text("items: list[int] = []\nif a < b and c > d:\n    pass\n")
+        cite.cite_one("generic.py:2", repo, show_snippet=True, markdown=True)
+        out = capsys.readouterr().out
+        assert "```python\n" in out
+        assert out.rstrip().endswith("```")
+        assert "if a < b" in out
+        assert "&lt;" not in out
+
+    def test_fence_grows_past_backtick_runs_in_the_source(self, repo: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        (repo / "notes.md").write_text("Use a fence:\n```\ncode\n```\n")
+        cite.cite_one("notes.md", repo, show_snippet=True, markdown=True)
+        out = capsys.readouterr().out
+        assert "````markdown\n" in out
+        assert out.rstrip().endswith("````")
+
+    def test_unknown_extension_gets_a_bare_fence(self, repo: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        (repo / "data.xyz").write_text("payload\n")
+        cite.cite_one("data.xyz:1", repo, show_snippet=True, markdown=True)
+        assert "```\npayload\n```" in capsys.readouterr().out
+
+    def test_md_suppresses_width_warnings(self, repo: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        (repo / "wide.py").write_text("x = '" + "y" * 200 + "'\n")
+        cite.cite_one("wide.py:1", repo, show_snippet=False, markdown=True)
+        assert capsys.readouterr().err == ""
+
+
+class TestStampMarkdown:
+    def test_inserts_the_stamp_as_the_first_line(self, repo: Path) -> None:
+        doc = repo / "doc.md"
+        doc.write_text("# Title\n\nBody.\n")
+        assert cite.stamp(doc, repo) == 0
+        first, rest = doc.read_text().split("\n", 1)
+        assert first.startswith("<!-- slideops-build commit=")
+        assert first.endswith(" -->")
+        assert rest == "# Title\n\nBody.\n"
+
+    def test_restamp_replaces_line_one_without_duplicating(self, repo: Path) -> None:
+        doc = repo / "doc.md"
+        doc.write_text("<!-- slideops-build commit=old date=2020-01-01 repo=old -->\n# Title\n")
+        assert cite.stamp(doc, repo) == 0
+        text = doc.read_text()
+        assert text.count("slideops-build") == 1
+        assert "commit=old" not in text
+        assert "# Title" in text
+
+    def test_a_fenced_example_stamp_is_left_alone(self, repo: Path) -> None:
+        example = "```markdown\n<!-- slideops-build commit=fffffff date=1999-01-01 repo=fake -->\n```\n"
+        doc = repo / "doc.md"
+        doc.write_text("# Title\n\n" + example)
+        assert cite.stamp(doc, repo) == 0
+        text = doc.read_text()
+        assert text.startswith("<!-- slideops-build commit=")
+        assert "commit=fffffff" in text
+        assert text.count("slideops-build") == 2
+
+
 class TestStamp:
     def test_inserts_into_a_deck_with_no_meta(self, repo: Path) -> None:
         deck = repo / "deck.html"
