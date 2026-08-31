@@ -2,6 +2,21 @@
 
 <sub>[← README](README.md) · [Install](docs/install.md) · [Freshness](docs/freshness.md) · [Development](docs/development.md) · **Changelog**</sub>
 
+## [1.1.1](https://github.com/glukicov/slideops/releases/tag/v1.1.1) - 2026-08-31
+
+Both PDF exports now number their pages.
+
+- **Markdown doc PDFs** carry a centred `page / total` footer, drawn by a CSS paged-media
+  `@page { @bottom-center }` margin box, so the count stays right however Chrome breaks
+  the content. The bottom margin widened to `20mm` to make room for it.
+- **Deck PDFs** carry the same footer as a translucent pill overlaid on each page, at the
+  `bottom: 18px` the deck's own HUD counter vacates during export. Margin boxes are no
+  help there: the pages are full-bleed screenshots printed at zero `@page` margin.
+- **Both are verified, not assumed.** Each footer is real text, so the render-back pass
+  extracts it and fails the export unless every page carries its own number. That is the
+  only thing that catches a Chrome too old for margin boxes, which drops the doc footer
+  silently and produces a PDF that is otherwise perfect.
+
 ## [1.1.0](https://github.com/glukicov/slideops/releases/tag/v1.1.0) - 2026-08-31
 
 Markdown documentation mode: the citation and freshness mechanism now writes docs, not

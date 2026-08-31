@@ -5,7 +5,7 @@ license: MIT
 compatibility: Needs a headless Chrome or Chromium binary (Playwright cache or system install) and Python 3 for the verification pass. Reads the target repository with git. Network access only if you opt into Mermaid diagrams (one npx download) or brand-colour extraction; everything else works offline.
 metadata:
   author: Gleb Lukicov
-  version: 1.1.0
+  version: 1.1.1
 ---
 
 # SlideOps: generate a deck from a repository, and keep it true
@@ -328,9 +328,10 @@ numbering, wrong aggregate numbers.
 
 If asked for a PDF, use the companion **slides-to-pdf** skill (distributed alongside this
 one; its SKILL.md is the full self-contained recipe if it isn't installed as a skill).
-It screenshots every slide at 2x, prints a page-per-slide PDF, and verifies the result by
-rendering the PDF back to images, which is required because headless Chrome cannot
-rasterize a local PDF for a visual check and image pages can be silently blank.
+It screenshots every slide at 2x, prints a page-per-slide PDF with a centred page number
+on every page, and verifies the result by rendering the PDF back to images, which is
+required because headless Chrome cannot rasterize a local PDF for a visual check and image
+pages can be silently blank.
 
 ## Step 6: Ship it, and say how to keep it honest
 

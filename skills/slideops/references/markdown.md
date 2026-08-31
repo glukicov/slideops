@@ -105,9 +105,10 @@ same evergreen-vs-snapshot decision.
 ## Optional PDF export
 
 If the user asks for a PDF of the doc, follow [`markdown-pdf.md`](markdown-pdf.md): a
-Markdown-to-HTML conversion, a print-CSS wrap, Chrome's native print pagination, and the
-same render-back verification the slides-to-pdf skill uses. Offer it the way decks offer
-PDF export; do not produce one unasked.
+Markdown-to-HTML conversion, a print-CSS wrap, Chrome's native print pagination, a centred
+`page / total` footer on every page, and the same render-back verification the
+slides-to-pdf skill uses. Offer it the way decks offer PDF export; do not produce one
+unasked.
 
 ## Refreshing a stale doc
 
