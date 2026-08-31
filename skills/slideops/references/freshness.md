@@ -39,6 +39,29 @@ Cite anything you quote or assert from a specific place: code snippets, config b
 tables built from a source file, a diagram's underlying module. Prose that summarises a
 whole subsystem does not need a citation; a number lifted from one line does.
 
+## The Markdown carrier
+
+A Markdown doc (see [`markdown.md`](markdown.md)) carries the same two attributes in an
+HTML comment directly above the fence it vouches for, invisible when rendered:
+
+````markdown
+<!-- slideops data-src="backend/app/main.py:40-58" data-sha256="a1b2c3d4e5f6" -->
+```python
+...verbatim source...
+```
+````
+
+`cite.py --md` prints the comment (and with `--snippet` the fenced source, no HTML
+escaping needed). Citations attach to the nearest preceding heading, which is what the
+report names instead of a slide number. The build stamp is a comment on line 1:
+
+```markdown
+<!-- slideops-build commit=a9c9c0d date=2026-08-24 repo=my-service -->
+```
+
+`cite.py --stamp doc.md` writes it, and `check.py` treats `.md` and `.html` targets
+identically from there on: same statuses, same `--suggest`, same `--json` repair brief.
+
 ## Recording the build point
 
 Once per deck, in the `<head>`:

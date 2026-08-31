@@ -1,7 +1,7 @@
 {
   "name": "slideops",
-  "description": "Turn a repository into a slide deck, then find out the day it stops matching the code. Ships slideops (repo to deck, with citation-based freshness checking) and slides-to-pdf (any hash-navigated HTML deck to a verified PDF).",
-  "version": "1.0.1",
+  "description": "Turn a repository into a slide deck or Markdown docs, then find out the day they stop matching the code. Ships slideops (repo to deck or cited Markdown doc, with citation-based freshness checking) and slides-to-pdf (any hash-navigated HTML deck to a verified PDF).",
+  "version": "1.1.0",
   "author": {
     "name": "Gleb Lukicov"
   },

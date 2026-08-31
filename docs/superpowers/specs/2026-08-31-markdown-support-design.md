@@ -105,10 +105,20 @@ def main() -> int:
   mention Markdown docs.
 - `README.md`: short section introducing the Markdown mode.
 
+## PDF export (added 2026-08-31, on Gleb's request)
+
+Markdown docs mirror the full deck path, PDF included. Unlike slides-to-pdf there are no
+per-slide screenshots: the recipe in `references/markdown-pdf.md` converts the `.md` to
+HTML (GFM converter, one npx download at most), rewrites relative image paths to
+absolute `file://` ones, pre-renders `mermaid` fences to SVG per diagrams.md, wraps the
+body in print CSS, prints with headless Chrome's native pagination, and verifies by
+rendering the PDF back to images with pypdfium2 (headless Chrome cannot rasterize a
+local PDF). `scripts/smoke_test.py` proves the wrap-print-verify pipeline in CI against
+the example doc.
+
 ## Out of scope
 
-- DOCX/PDF export of Markdown docs (the `.md` is the artifact; converters are the
-  user's choice).
+- DOCX export (the `.md` and its PDF are the artifacts).
 - Multi-file doc sites; one request produces one file, like one deck.
 - Changing the HTML deck pipeline in any behavioural way.
 
