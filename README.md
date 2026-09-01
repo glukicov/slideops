@@ -36,8 +36,10 @@ The reasoning behind it is written up in
 
 ## Install
 
-**Claude Code.** This repo is its own marketplace, so two commands are the whole setup, and
-it's the only install that keeps itself up to date. Add the marketplace:
+### Claude Code
+
+This repo is its own marketplace, so two commands are the whole setup, and it's the only
+install that keeps itself up to date. Add the marketplace:
 
 ```
 /plugin marketplace add glukicov/slideops
@@ -49,13 +51,17 @@ Then install the plugin from it:
 /plugin install slideops@slideops
 ```
 
-**Any agent with the [skills CLI](https://skills.sh)**, in one line:
+### Any agent with the [skills CLI](https://skills.sh)
+
+One line, and it works everywhere:
 
 ```bash
 npx skills add glukicov/slideops
 ```
 
-**Codex, Copilot CLI, OpenCode**, or a plain checkout:
+### Codex, Copilot CLI, OpenCode
+
+Or a plain checkout:
 
 ```bash
 git clone https://github.com/glukicov/slideops && cd slideops
