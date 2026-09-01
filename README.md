@@ -36,11 +36,16 @@ The reasoning behind it is written up in
 
 ## Install
 
-**Claude Code.** This repo is its own marketplace, so two lines are the whole setup, and
-it's the only install that keeps itself up to date:
+**Claude Code.** This repo is its own marketplace, so two commands are the whole setup, and
+it's the only install that keeps itself up to date. Add the marketplace:
 
 ```
 /plugin marketplace add glukicov/slideops
+```
+
+Then install the plugin from it:
+
+```
 /plugin install slideops@slideops
 ```
 

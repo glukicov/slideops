@@ -7,14 +7,21 @@ their own. If you're on Claude Code, take the first one.
 
 ## Claude Code plugin: the only install that updates itself
 
+Add the marketplace:
+
 ```
 /plugin marketplace add glukicov/slideops
+```
+
+Then install the plugin from it:
+
+```
 /plugin install slideops@slideops
 ```
 
-This repository is its own marketplace, so those two lines are the whole setup. Claude Code
-checks for new versions in the background after a session starts and prompts you to run
-`/reload-plugins` when one lands.
+This repository is its own marketplace, so those two commands are the whole setup. Claude
+Code checks for new versions in the background after a session starts and prompts you to
+run `/reload-plugins` when one lands.
 
 > [!TIP]
 > One thing worth doing once: third-party marketplaces have **auto-update off by default**.
