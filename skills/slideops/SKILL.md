@@ -5,7 +5,7 @@ license: MIT
 compatibility: Needs a headless Chrome or Chromium binary (Playwright cache or system install) and Python 3 for the verification pass. Reads the target repository with git. Network access only if you opt into Mermaid diagrams (one npx download) or brand-colour extraction; everything else works offline.
 metadata:
   author: Gleb Lukicov
-  version: 1.1.1
+  version: 1.1.2
 ---
 
 # SlideOps: generate a deck from a repository, and keep it true
@@ -79,8 +79,8 @@ Spend ~2 minutes scanning the repo **before asking anything**, so every question
 is concrete and every option you offer actually exists: read the README and the
 manifest(s) that define the product (per-app in a monorepo), run `git log --oneline -15`
 and glance at the top-level tree and `docs/`, and check whether `docs/slides/` already has
-decks (its `README.md` shows the local conventions). Do not start slide research yet; this
-pass is only to ask good questions. The scan itself may hit stale doc pointers; note them
+decks (open one: its title slide, theme and build stamp show the local conventions). Do
+not start slide research yet; this pass is only to ask good questions. The scan itself may hit stale doc pointers; note them
 and move on (Step 1's code-wins rule deals with drift later).
 
 What you find shapes the candidates:
@@ -126,9 +126,8 @@ in each list, skip any item the user already answered, and never exceed these si
    defaults and ask the user to object to any ("PDF export: no · Mermaid diagrams: built-in
    flow boxes only (Mermaid needs one-time `npx` network access, see
    [`references/diagrams.md`](references/diagrams.md)) · output:
-   `<repo>/docs/slides/<topic-slug>-<date>.html`"). The output folder's shared companion
-   `README.md` gets one section per deck; append or update your deck's section, never
-   overwrite another's.
+   `<repo>/docs/slides/<topic-slug>-<date>.html`"). The deck (plus a PDF if asked for) is
+   the only file this produces, so there is nothing else to agree on.
 
 For "what changed" style decks, also pin the **recency window** (a date range or "since
 the last release") and resolve it with `git log` before writing anything, not from memory.
@@ -321,8 +320,8 @@ numbering, wrong aggregate numbers.
    "
    ```
 5. Fix what you find, re-screenshot *those* slides, confirm the fix. Clean up every temp
-   screenshot/scratch file when you're done: nothing but the deck (+ optional PDF, +
-   README) should remain.
+   screenshot/scratch file when you're done: nothing but the deck (+ optional PDF)
+   should remain.
 
 ## Step 5: Optional PDF export
 
@@ -335,15 +334,20 @@ pages can be silently blank.
 
 ## Step 6: Ship it, and say how to keep it honest
 
-Write (or extend) the companion `README.md` next to the deck. Re-read it immediately
-before appending: another build may have changed it since your scan. One section per deck
-in the folder, each covering: what the deck covers, slide count, how to view/navigate it, and,
-since decks get edited slide-by-slide over many follow-up requests, a one-paragraph note
-on how the file is structured for future edits (the pattern-block/comment-numbering
-conventions above).
+**The deck is the only file you leave behind.** Do not write a companion `README.md`,
+index, summary or notes file next to it, and do not add the deck to an existing one unless
+the user asks: the deck already states what it covers, the build stamp already records
+where it came from, and a hand-written sidecar is one more thing to go stale. If the repo
+already keeps such an index and the user wants it updated, that is their call to make, not
+a default.
 
-Tell the user, in your final message and in the README section, how to find out when the
-deck has gone stale:
+Everything that would have gone in that file belongs in your final message instead: what
+the deck covers, its slide count, where it was written, how to view and navigate it
+(click, arrow keys, `Esc` for the overview, `N` for notes) and, since decks get edited
+slide-by-slide over many follow-up requests, one paragraph on how the file is structured
+for future edits (the pattern-block/comment-numbering conventions above).
+
+Tell the user, in that same message, how to find out when the deck has gone stale:
 
 ```bash
 python3 scripts/check.py <deck-or-folder> --repo <repo> --suggest

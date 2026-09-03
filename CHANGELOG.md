@@ -2,6 +2,21 @@
 
 <sub>[← README](README.md) · [Install](docs/install.md) · [Freshness](docs/freshness.md) · [Development](docs/development.md) · **Changelog**</sub>
 
+## [1.1.2](https://github.com/glukicov/slideops/releases/tag/v1.1.2) - 2026-09-03
+
+A build leaves one file behind: the deck, or the doc.
+
+- **No more companion `README.md`.** Step 6 used to have the agent write or extend a
+  shared readme next to the deck, one section per deck in the folder. That sidecar carried
+  no citations, so it was the one artifact `check.py` could not keep honest, and it went
+  stale the first time a deck was edited. What it held (coverage, slide count, navigation
+  keys, how the file is structured for later edits) is now reported in the final message
+  instead, and touching an index the repo already keeps is the user's call.
+- **Markdown mode says the same thing**, so a cited doc no longer grows an uncited
+  neighbour either.
+- The intake no longer asks about the output folder's readme conventions, and the Step 4
+  cleanup rule now expects nothing but the deck and an optional PDF.
+
 ## [1.1.1](https://github.com/glukicov/slideops/releases/tag/v1.1.1) - 2026-08-31
 
 Both PDF exports now number their pages.
