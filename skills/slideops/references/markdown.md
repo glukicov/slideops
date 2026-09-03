@@ -91,6 +91,12 @@ The Step 0 orientation pass and the compact intake carry over, with these swaps:
 
 ## Ship, and keep it honest
 
+**The doc is the only file you leave behind.** Do not write a companion `README.md`, index
+or summary file beside it, and do not link it into an existing one unless the user asks:
+the doc's own title and build stamp already say what it covers and where it came from, and
+an uncited sidecar is the one file `check.py` cannot keep honest. Report what the doc
+covers, and where you wrote it, in your final message instead.
+
 Tell the user how to find out when the doc goes stale, exactly as with a deck:
 
 ```bash
